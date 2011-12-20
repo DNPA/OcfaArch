@@ -1,0 +1,29 @@
+
+Note in the Makefile the references to libPersistentQueue.a
+
+Untill we have a proper installation of PersistenQueue, proceed as
+follows;
+
+To build:
+
+cd ../ppq
+./build.sh
+ar -rs libPersistentQueue.a WriteFile.o ReadFile.o StatusFile.o PersistentPriorityQueue.o PersistentFifo.o
+
+Now you have the library libPersistentQueue.a.
+
+To 'install' :
+
+su -
+cd /lib (or some other standard library dir on your system)
+ln -s <path to libPersistentQueue.a>
+
+This works for me ...
+
+In the makefile set the path to the headerfiles with -I
+
+
+Debugging:
+In the debugger you need to give the command:
+  handle SIGPIPE "nostop"
+This will keep the program from breaking on module disconnects.

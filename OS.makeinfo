@@ -1,0 +1,8 @@
+#Please uncomment ONE AND ONLY ONE of the folowing lines.
+#include $(OCFAARCH_TOP_DIR)/makeinfo/mndk10.makeinfo
+#include $(OCFAARCH_TOP_DIR)/makeinfo/mndk9.makeinfo
+#include $(OCFAARCH_TOP_DIR)/makeinfo/osx.makeinfo
+#include $(OCFAARCH_TOP_DIR)/makeinfo/debiansarge.makeinfo
+#include $(OCFAARCH_TOP_DIR)/makeinfo/sol10sparc.makeinfo
+#include $(OCFAARCH_TOP_DIR)/makeinfo/redhat8.makeinfo
+include $(OCFAARCH_TOP_DIR)/configure.makeinfo

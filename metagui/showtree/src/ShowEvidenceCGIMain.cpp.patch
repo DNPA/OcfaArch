@@ -1,0 +1,10 @@
+62a63
+>       #ifndef LINUX64
+68c69
+< 	
+---
+>       #endif
+69a71
+>       #ifndef LINUX64
+70a73
+>       #endif

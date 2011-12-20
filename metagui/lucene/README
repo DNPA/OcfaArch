@@ -1,0 +1,32 @@
+This is the first version of the lucene search engine of
+digiwash2 It is a straight forward port of the midas search interface. It 
+will be improved on newer occasions.
+
+In general, files are indexed by the dataid in of their
+metadatainfo. This is stored in the field dttaid. The interface must
+first retrieve that dataid and then use the postgres database to
+retrieve the other information.
+
+Files:
+DbMetaSearcher: Class that uses the search engine to show results from a database, used for the makemetaindex.pl
+
+DocInfo Helper struct of a docid and a score.
+
+EvidenceInfo struct that contains all information of a found evidence.
+
+IndexCgiFrontEnd specialization of a IndexFrontEnd used for the CGI
+
+IndexCliFrontEnd specialization of a IndexFrontEnd used for the Command line interface.
+
+IndexFrontEnd contains methods for searching the index and retrieving
+ all other information about an evidence.
+ 
+IndexResultGatherer. Given results from an index, this class retrieves
+all other information from the postgress database.
+
+LuceneSearcher Searchers one lucene index.
+
+MultiIndexSearcher: Searchers multiple LuceneSearchers.
+
+QueryTool: Cgi interface that allows you to query the database directly
+

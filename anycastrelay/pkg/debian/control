@@ -1,0 +1,6 @@
+Package: ocfa-anycastrelay
+Version: 2.3.0
+Architecture: amd64
+Depends: ocfa-lib
+Maintainer: Klpd <ocfa@dnpa.nl>
+Description: Anycast-relay for the Open Computer Forensics Architecture.

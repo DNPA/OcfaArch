@@ -1,0 +1,284 @@
+#Tabel;namespace;type;value;last_module;FinalAction;Target;Argumenten
+##################################################################
+#   The table into what all evidence enters the router           #
+##################################################################
+# If the last module said the data had an invalid format, let a digital investigator look at it.
+default;DNTCR;validformat;0;mailsplit;ACT_FORWARD;mailwash;
+default;DNTCR;validformat;0;DNTCR;ACT_FORWARD;digital_investigator_review_invalidformat;
+default;DNTCR;brokenmodule;1;DNTCR;ACT_FORWARD;digital_investigator_review_brokenmodule;
+#Put a braik on the number of jobs a single evidence could have traversed.
+default;DNTCR;jobcount;20;DNTCR;ACT_COMMIT;dsm;
+#Anything with a nodetype must be something just derived.
+default;DNTCR;nodetype;DNTCR;DNTCR;ACT_JUMP;newnode;
+#What remains are non-new nodes.
+#If fsstat has seen a filesystem here, lets send look at that closer, different filesystems may go to different modules.
+default;DNTCR;FileSystemType;DNTCR;fsstat;ACT_JUMP;filesystems;
+default;DNTCR;digestsource;DNTCR;DNTCR;ACT_JUMP;digestsource;
+default;DNTCR;oletype;DNTCR;DNTCR;ACT_JUMP;oletype;
+default;DNTCR;mimetype;DNTCR;DNTCR;ACT_JUMP;contenttype;
+default;DNTCR;fileextension;DNTCR;DNTCR;ACT_JUMP;fileext;
+default;DNTCR;mimetype;DNTCR;DNTCR;ACT_JUMP;crapcontenttype;
+#If all else fails, use the last module to route on.
+default;DNTCR;DNTCR;DNTCR;DNTCR;ACT_JUMP;lastmodule;
+#############################################################
+#For newly derived nodes, put a brake on the number of parents there could be.
+newnode;DNTCR;parentcount;90;DNTCR;ACT_COMMIT;dsm;
+#If we have a non empty datasha1, than our node has data and we process it in the newdatanode table.
+#There is no way to check for empty string, so the folowing 16 lines are a bit of a hack to test for
+#non empty strings.
+newnode;DNTCR;datasha1;0;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;1;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;2;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;3;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;4;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;5;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;6;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;7;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;8;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;9;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;a;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;b;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;c;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;d;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;e;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;f;DNTCR;ACT_JUMP;newdatanode;
+#Any node remaining is a node with no data in it.
+#A deleted file could have no data, so thats ok.
+newnode;DNTCR;isdeleted;1;DNTCR;ACT_COMMIT;dsm;
+#An emptyfile can have no data, so that's ok.
+newnode;DNTCR;nodetype;emptyfile;DNTCR;ACT_COMMIT;dsm;
+#Files, alternatestreams, swap, disk-image/no-ptable, disk-image/empty-ptable, unallocateddiskspace, disk-image and diskpartition should always have data.
+#So if we see any of these without, its not good.
+newnode;DNTCR;nodetype;file;DNTCR;ACT_FORWARD;developer_review_bogusdatanode;
+newnode;DNTCR;evidencelocation;<attribute::data::$Bad>;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;alternatestream;DNTCR;ACT_FORWARD;developer_review_bogusdatanode;
+newnode;DNTCR;nodetype;swap;DNTCR;ACT_FORWARD;developer_review_bogusdatanode;
+newnode;DNTCR;nodetype;disk-image/no-ptable;DNTCR;ACT_FORWARD;developer_review_bogusdatanode;
+newnode;DNTCR;nodetype;disk-image/empty-ptable;DNTCR;ACT_FORWARD;developer_review_bogusdatanode;
+newnode;DNTCR;nodetype;unallocateddiskspace;DNTCR;ACT_FORWARD;developer_review_bogusdatanode;
+newnode;DNTCR;nodetype;slack;DNTCR;ACT_FORWARD;developer_review_bogusdatanode;
+newnode;DNTCR;nodetype;disk-image;DNTCR;ACT_FORWARD;developer_review_bogusdatanode;
+newnode;DNTCR;nodetype;diskpartition;DNTCR;ACT_FORWARD;developer_review_bogusdatanode;
+#Directories have no data, so that's ok.
+newnode;DNTCR;nodetype;dir;DNTCR;ACT_COMMIT;dsm;
+#Softlink's don't need to have data, so that's ok.
+newnode;DNTCR;nodetype;softlink;DNTCR;ACT_COMMIT;dsm;
+#Fifo node's, characterdevice, blockdevices, sockets and  whiteouts should have no data, so that's OK.
+newnode;DNTCR;nodetype;fifo;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;characterdevice;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;blockdevice;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;socket;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;whiteout;DNTCR;ACT_COMMIT;dsm;
+#Filesystems, vtmetas and libtsk3_virtual may have no data, so that's OK.
+newnode;DNTCR;nodetype;vtmeta;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;filesystem;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;libtsk3_virtual;DNTCR;ACT_COMMIT;dsm;
+#Pseudodirs should have no data, so that's OK.
+newnode;DNTCR;nodetype;pseudodir;DNTCR;ACT_COMMIT;dsm;
+#If a node has nodetype undefined, that's not good, lets put those nodes to the side.
+newnode;DNTCR;nodetype;undefined;DNTCR;ACT_FORWARD;undefnodetype;
+#Any other node type is invalid.
+newnode;DNTCR;nodetype;DNTCR;DNTCR;ACT_FORWARD;developer_review_badnodetype;
+#############################################################
+#First check for known empty and functionaly empty files.
+newdatanode;DNTCR;datasha1;da39a3ee5e6b4b0d3255bfef95601890afd80709;DNTCR;ACT_COMMIT;dsm;
+newdatanode;DNTCR;datasha1;adc83b19e793491b1c6ea0fd8b46cd9f32e592fc;DNTCR;ACT_COMMIT;dsm;
+newdatanode;DNTCR;datasha1;ba8ab5a0280b953aa97435ff8946cbcbb2755a27;DNTCR;ACT_COMMIT;dsm;
+#An empty file should have no data, so if it has, there is something wrong.
+newdatanode;DNTCR;nodetype;emptyfile;DNTCR;ACT_FORWARD;developer_review_bogusnodedata;
+#If our data node is a file or alternatestream, process it as a new file.
+newdatanode;DNTCR;nodetype;file;DNTCR;ACT_JUMP;newfiles;
+newdatanode;DNTCR;nodetype;alternatestream;DNTCR;ACT_JUMP;newfiles;
+#Swap, disk-image/no-ptable, disk-image/empty-ptable and unallocateddiskspace should go to the carver.
+newdatanode;DNTCR;nodetype;swap;DNTCR;ACT_FORWARD;carver;
+newdatanode;DNTCR;nodetype;disk-image/no-ptable;DNTCR;ACT_FORWARD;carver;
+newdatanode;DNTCR;nodetype;disk-image/empty-ptable;DNTCR;ACT_FORWARD;carver;
+newdatanode;DNTCR;nodetype;unallocateddiskspace;DNTCR;ACT_FORWARD;carver;
+newdatanode;DNTCR;nodetype;slack;DNTCR;ACT_FORWARD;dsm;
+#disk-image and diskpartition may hold a filesystem, send it to fsstat to check that.
+newdatanode;DNTCR;nodetype;disk-image;DNTCR;ACT_FORWARD;fsstat;
+newdatanode;DNTCR;nodetype;diskpartition;DNTCR;ACT_FORWARD;fsstat;
+#directories should have no data, if they do, that's not OK.
+newdatanode;DNTCR;nodetype;dir;DNTCR;ACT_FORWARD;developer_review_bogusnodedata;
+#Softlinks with libtsk may have data, we may want to look into this one to check if it makes sense. 
+newdatanode;DNTCR;nodetype;softlink;DNTCR;ACT_FORWARD;dsm;
+#A fifo, characterdevice, blockdevice, socket or whiteout should not have any data, if it does, that's not OK.
+newdatanode;DNTCR;nodetype;fifo;DNTCR;ACT_FORWARD;developer_review_bogusnodedata;
+newdatanode;DNTCR;nodetype;characterdevice;DNTCR;ACT_FORWARD;developer_review_bogusnodedata;
+newdatanode;DNTCR;nodetype;blockdevice;DNTCR;ACT_FORWARD;developer_review_bogusnodedata;
+newdatanode;DNTCR;nodetype;socket;DNTCR;ACT_FORWARD;developer_review_bogusnodedata;
+newdatanode;DNTCR;nodetype;whiteout;DNTCR;ACT_FORWARD;developer_review_bogusnodedata;
+#vtmata may or may not have data, so that's OK.
+newdatanode;DNTCR;nodetype;vtmeta;DNTCR;ACT_COMMIT;dsm;
+#A filesystem node, of what we're not sure of its type should go to fsstat for checking.
+newdatanode;DNTCR;nodetype;filesystem;DNTCR;ACT_FORWARD;fsstat;
+#libtsk3_virtual may or may not have data, so that's OK.
+newdatanode;DNTCR;nodetype;libtsk3_virtual;DNTCR;ACT_COMMIT;dsm;
+#A pseudodir should not have data, so that;s not OK.
+newdatanode;DNTCR;nodetype;pseudodir;DNTCR;ACT_FORWARD;developer_review_bogusnodedata;
+#If a node has nodetype undefined, that's not good, lets poot those nodes to the side.
+newdatanode;DNTCR;nodetype;undefined;DNTCR;ACT_FORWARD;undefnodetype;
+#Any other node type is invalid.
+newdatanode;DNTCR;nodetype;DNTCR;DNTCR;ACT_FORWARD;badnodetype;
+##################################################################
+#For now send all filesystems to tskfs. We may later want to send some to snorkel and some to tskfs
+#depending on the type.
+filesystems;DNTCR;FileSystemType;DNTCR;DNTCR;ACT_FORWARD;tskfs;
+##################################################################
+# All new files comming either directly from the kickstart or    #
+# having just been derived from other evidence by some module    #
+################################################################## 
+# If the new file comes from a kickstart module, look if it is likely to be an image.
+newfiles;DNTCR;DNTCR;DNTCR;kickstart;ACT_JUMP;images;
+newfiles;DNTCR;datasha1;DNTCR;DNTCR;ACT_JUMP;emptyfiles;
+newfiles;DNTCR;parentcount;90;DNTCR;ACT_COMMIT;dsm;
+newfiles;DNTCR;DNTCR;DNTCR;strings;ACT_FORWARD;indexer;
+newfiles;DNTCR;DNTCR;DNTCR;antiword;ACT_FORWARD;indexer;
+newfiles;DNTCR;DNTCR;DNTCR;pdftotext;ACT_FORWARD;indexer;
+newfiles;DNTCR;DNTCR;DNTCR;mailsplit;ACT_FORWARD;mailwash;
+newfiles;DNTCR;DNTCR;DNTCR;dbxsplit;ACT_FORWARD;mailwash;
+newfiles;DNTCR;mimetype;DNTCR;mailwash;ACT_JUMP;nwcontenttypedfl;
+newfiles;DNTCR;haspassword;DNTCR;DNTCR;ACT_FORWARD;digital_investigator_review_haspassword;
+newfiles;DNTCR;evidencelocation;Thumbs.db;DNTCR;ACT_FORWARD;vinettocfa;
+newfiles;DNTCR;evidencelocation;index.dat;DNTCR;ACT_FORWARD;pasco;
+newfiles;DNTCR;nodetype;file;DNTCR;ACT_FORWARD;digest;
+newfiles;DNTCR;nodetype;alternatestream;DNTCR;ACT_FORWARD;digest;
+newfiles;DNTCR;nodetype;DNTCR;DNTCR;ACT_FORWARD;dsm;
+#
+emptyfiles;DNTCR;datasha1;da39a3ee5e6b4b0d3255bfef95601890afd80709;DNTCR;ACT_COMMIT;dsm;
+emptyfiles;DNTCR;datasha1;adc83b19e793491b1c6ea0fd8b46cd9f32e592fc;DNTCR;ACT_COMMIT;dsm;
+emptyfiles;DNTCR;datasha1;ba8ab5a0280b953aa97435ff8946cbcbb2755a27;DNTCR;ACT_COMMIT;dsm;
+#
+nwcontenttypedfl;DNTCR;mimetype;text/x-ocfa-mailheaders;DNTCR;ACT_COMMIT;dsm;
+nwcontenttypedfl;DNTCR;mimetype;text/x-ocfa-mail;DNTCR;ACT_FORWARD;mailwash;
+nwcontenttypedfl;DNTCR;mimetype;DNTCR;DNTCR;ACT_JUMP;contenttype;
+#
+
+###################################################################
+# If there is no metadata to route on, us the last module that    #
+# processed the (not newly derived) evidence.                     #
+# Explicitly send to the dsm if we know we should.                #
+###################################################################
+#If tskfs is done with it, blkls can look at the unallocated.
+lastmodule;DNTCR;DNTCR;DNTCR;tskfs;ACT_FORWARD;blkls;
+#If fsstat found no filesystem, maybe mmls will find a partition table.
+lastmodule;DNTCR;DNTCR;DNTCR;fsstat;ACT_FORWARD;mmls;
+lastmodule;DNTCR;DNTCR;DNTCR;fsstat;ACT_JUMP;fromfsstat;
+lastmodule;DNTCR;DNTCR;DNTCR;tskfs;ACT_FORWARD;blkls;
+lastmodule;DNTCR;DNTCR;DNTCR;blkls;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;swap;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;carver;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;mmls;ACT_COMMIT;dsm;
+#
+lastmodule;DNTCR;DNTCR;DNTCR;strings;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;vinettocfa;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;pasco;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;carver;ACT_FORWARD;strings;
+lastmodule;DNTCR;DNTCR;DNTCR;pkr;ACT_FORWARD;pgp;
+lastmodule;DNTCR;DNTCR;DNTCR;indexer;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;mailsplit;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;dbxsplit;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;mailwash;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;exif;ACT_FORWARD;fivesfaces;
+lastmodule;DNTCR;DNTCR;DNTCR;7z;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;antiword;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;bzip;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;gzip;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;oleexpress;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;pdftotext;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;tar;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;zip;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;objdump;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;pgp;ACT_COMMIT;dsm;
+###################################################################
+# Processing of images that are entered directly                  #
+###################################################################
+#For kickstarted files, look at the extention of files for potential image files.
+images;DNTCR;evidencelocation;.crv;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.img;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.IMG;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.dd;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.DD;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.e01;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.E01;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.aff;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.AFF;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.ISO;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.iso;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.RAW;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.raw;DNTCR;ACT_FORWARD;fsstat;
+#
+#
+digestsource;DNTCR;digestsource;NIST;DNTCR;ACT_COMMIT;dsm;
+digestsource;DNTCR;digestsource;KP;DNTCR;ACT_COMMIT;dsm;
+digestsource;DNTCR;digestsource;MALL;DNTCR;ACT_COMMIT;dsm;
+digestsource;DNTCR;digestsource;DNTCR;DNTCR;ACT_FORWARD;file;
+#
+contenttype;DNTCR;mimetype;application/x-rar;DNTCR;ACT_FORWARD;ocfarar;
+contenttype;DNTCR;mimetype;image/jpeg;DNTCR;ACT_FORWARD;exif;
+contenttype;DNTCR;mimetype;application/msword;DNTCR;ACT_FORWARD;antiword;
+contenttype;DNTCR;mimetype;application/pgp-signature;DNTCR;ACT_FORWARD;pgp;
+contenttype;DNTCR;mimetype;application/x-gnupg-keyring;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;application/pgp;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;message/rfc822;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;text/PGP;DNTCR;ACT_FORWARD;pgp;
+contenttype;DNTCR;mimetype;text/GnuPG;DNTCR;ACT_FORWARD;pgp;
+contenttype;DNTCR;mimetype;application/x-ocfa-outlook-express;DNTCR;ACT_FORWARD;dbxsplit;
+contenttype;DNTCR;mimetype;application/x-compress;DNTCR;ACT_FORWARD;7z;
+contenttype;DNTCR;mimetype;application/x-zip;DNTCR;ACT_FORWARD;zip;
+contenttype;DNTCR;mimetype;application/zip;DNTCR;ACT_FORWARD;zip;
+contenttype;DNTCR;mimetype;application/compress;DNTCR;ACT_FORWARD;gzip;
+contenttype;DNTCR;mimetype;application/x-gzip;DNTCR;ACT_FORWARD;gzip;
+contenttype;DNTCR;mimetype;application/gzip;DNTCR;ACT_FORWARD;gzip;
+contenttype;DNTCR;mimetype;application/x-tar;DNTCR;ACT_FORWARD;tar;
+contenttype;DNTCR;mimetype;application/tar;DNTCR;ACT_FORWARD;tar;
+contenttype;DNTCR;mimetype;application/x-gtar;DNTCR;ACT_FORWARD;tar;
+contenttype;DNTCR;mimetype;application/x-bzip;DNTCR;ACT_FORWARD;bzip;
+contenttype;DNTCR;mimetype;application/bzip;DNTCR;ACT_FORWARD;bzip;
+contenttype;DNTCR;mimetype;application/x-bzip2;DNTCR;ACT_FORWARD;bzip;
+contenttype;DNTCR;mimetype;application/bzip2;DNTCR;ACT_FORWARD;bzip;
+contenttype;DNTCR;mimetype;application/pdf;DNTCR;ACT_FORWARD;pdftotext;
+contenttype;DNTCR;mimetype;application/pgp-signature;DNTCR;ACT_FORWARD;pgp;
+contenttype;DNTCR;mimetype;application/x-gnupg-keyring;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;application/pgp;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;text/x-mail;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;text/mail;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;message/rfc822;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;text/x-news;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;text/news;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;text/PGP;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;text/GnuPG;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;text;DNTCR;ACT_FORWARD;indexer;
+contenttype;DNTCR;mimetype;application/x-dosexec;DNTCR;ACT_FORWARD;objdump;
+contenttype;DNTCR;mimetype;application/dosexec;DNTCR;ACT_FORWARD;objdump;
+contenttype;DNTCR;fileinfo;Microsoft Office Document;DNTCR;ACT_FORWARD;antiword;
+contenttype;DNTCR;fileinfo;x-ocfa-xmlutf16LE;DNTCR;ACT_FORWARD;utf16le2utf8;
+contenttype;DNTCR;fileinfo;VMWare;DNTCR;ACT_FORWARD;qemuimg;
+contenttype;DNTCR;fileinfo;COW file;DNTCR;ACT_FORWARD;qemuimg;
+contenttype;DNTCR;mimetype;application/xml;DNTCR;ACT_FORWARD;indexer;
+#
+contenttype;DNTCR;fileinfo;filesystem;DNTCR;ACT_FORWARD;fsstat;
+contenttype;DNTCR;fileinfo;partition;DNTCR;ACT_FORWARD;fsstat;
+contenttype;DNTCR;fileinfo;boot sector;DNTCR;ACT_FORWARD;fsstat;
+#
+fileext;DNTCR;fileextension;doc;DNTCR;ACT_FORWARD;antiword;
+fileext;DNTCR;fileextension;eml;DNTCR;ACT_FORWARD;mailwash;
+fileext;DNTCR;fileextension;dbx;DNTCR;ACT_FORWARD;dbxsplit;
+fileext;DNTCR;fileextension;pgp;DNTCR;ACT_FORWARD;pkr;
+fileext;DNTCR;fileextension;pkr;DNTCR;ACT_FORWARD;pkr;
+fileext;DNTCR;fileextension;gpg;DNTCR;ACT_FORWARD;pkr;
+fileext;DNTCR;fileextension;ask;DNTCR;ACT_FORWARD;pgp;
+fileext;DNTCR;fileextension;qcow;DNTCR;ACT_FORWARD;qemuimg;
+fileext;DNTCR;fileextension;qcow2;DNTCR;ACT_FORWARD;qemuimg;
+fileext;DNTCR;fileextension;mbx;DNTCR;ACT_FORWARD;mbx2mbox;
+#
+crapcontenttype;DNTCR;mimetype;application/octet-stream;DNTCR;ACT_COMMIT;dsm;
+crapcontenttype;DNTCR;mimetype;application;DNTCR;ACT_COMMIT;dsm;
+crapcontenttype;DNTCR;mimetype;image;DNTCR;ACT_COMMIT;dsm;
+crapcontenttype;DNTCR;mimetype;audio;DNTCR;ACT_COMMIT;dsm;
+crapcontenttype;DNTCR;mimetype;video;DNTCR;ACT_COMMIT;dsm;
+#
+oletype;DNTCR;oletype;WordDocument;DNTCR;ACT_FORWARD;antiword;
+oletype;DNTCR;oletype;PowerPoint;DNTCR;ACT_FORWARD;strings;
+oletype;DNTCR;oletype;Visio;DNTCR;ACT_FORWARD;strings;
+oletype;DNTCR;oletype;DNTCR;DNTCR;ACT_FORWARD;strings;

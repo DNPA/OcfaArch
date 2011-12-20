@@ -1,0 +1,27 @@
+How to manage your items.
+
+Deleting items is fairly timeconsuming. To improve the user
+experience, a new concept is created. 'Hiding Items'. A hidden item is
+still in the database, but should not show up on the user interface
+for the tactical investigator. When time is sufficient, the hidden
+items can be deleted.
+
+For now it is a wise idea, to make a backup of your database and
+repository before using these scripts (Why? Because it is always wise
+to make backups).
+
+In order to hide an item you can type:
+hideitem <case> <source> <item>
+
+the itemname will change to <itemname> + "hidden" + <date/time> and
+the hidden field in the item table will be set to true.
+
+When you have time you can do 'deletehidden' which removes all traces
+from the hidden items from the database and also removes all
+metastoreentities.
+
+
+If the you use the new db.sql your items table should have a boolean
+field called hidden. If you don't have it (e.g., when you are using it
+on an existing case), you can add it by  typing 
+alter table item add column hidden boolean default false;.

@@ -1,0 +1,6 @@
+Package: ocfa-kicktree
+Version: 2.3.0
+Architecture: amd64
+Depends: ocfa-lib,ocfa-anycastrelay
+Maintainer: Klpd <ocfa@dnpa.nl>
+Description: The Open Computer Forensics Architecture modular kickstarting tool..

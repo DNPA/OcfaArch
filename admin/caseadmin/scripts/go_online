@@ -1,0 +1,4 @@
+#!/bin/bash
+/usr/local/digiwash/bin/go_online_httpd
+/usr/local/digiwash/bin/go_online_ppq
+/usr/local/digiwash/bin/go_online_database

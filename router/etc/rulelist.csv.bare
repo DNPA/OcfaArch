@@ -1,0 +1,4 @@
+#Tabel;namespace;type;value;last_module;FinalAction;Target;Argumenten
+# Routing on primary values;;;;;;;
+default;DNTCR;inodetype;file;DNTCR;ACT_FORWARD;dsm;
+

@@ -1,0 +1,95 @@
+version=2.3
+syslog=warning
+esyslog=notice
+profiling=false
+schemacheck=false
+handleslack=false
+verbosemeta=true
+schemadir=$OCFAROOT/schema/
+prettyprint=true
+moduletwice=fail
+forcetimestamps=true
+mailwash:moduletwice=ok
+zip:moduletwice=ok
+tar:moduletwice=ok
+rar:moduletwice=ok
+bzip:moduletwice=ok
+gzip:moduletwice=ok
+sleuthkit:moduletwice=ok
+7z:moduletwice=ok
+mmls:moduletwice=ok
+tskfs:moduletwice=ok
+mmls:rootnodename=PARTITIONED
+tskfs:rootnodename=ROOTDIR
+blkls:rootnodename=UNALLOC
+scalpelcp:rootnodename=CARVED
+carver:rootnodename=CARVED
+maxparents=100
+staticmounts=false
+daemonize=true
+basetime=30
+ignoredirexecacl=true
+smartcharsets=true
+recover=false
+validpathregex=^[/cfa].*
+#For debugging of rulelists, log2db defines if evidence log lines are put into the database.
+#modules2db defines if job numbers and module names are put into the database.
+#Please note that the tables need to be created manually.
+log2db=false
+modules2db=false
+# Postgres database params
+# Msgqueue and store params will normally be the same, you can however
+# use different databases on different hosts for these.
+# Note: you must set tcpip_socket = true in postgresql.conf
+# Msg queue
+storedbhost=127.0.0.1
+storedbuser=ocfa
+failfatal=true
+#lucene_fifobuffer=/var/ocfa/fifo
+#dsm
+metatabledescription=$OCFAETC/dsm.conf
+
+chopsize=64
+# ocfa0.5 feature: which logging do you want?
+loglib=ocfasyslog
+
+## file which further specifies logging properties.
+#log4cxx.propertyfile=etc/log4c.properties
+#targetaccessor:log4cxx.propertyfile=etc/log4c.properties
+storeimpl=pgblob
+ignoreowneracl=true
+#repository=/var/ocfa/case/repository
+isRelay=n
+#ping:ping:isRelay=y
+msgLibrary=ClientMessageBox
+
+## router specific section
+extendedevidence=true
+routerIP=127.0.0.1
+rulelist=$OCFAETC/rulelist.csv
+#default final action type: Should be FACT_COMMIT, FACT_SUSPEND or FACT_FORWARD
+defaultfatype=FACT_COMMIT
+#default final action value
+defaultfavalue=dsm
+defaultnamespace=klpd
+
+## anycast router
+anycast:isRelay=y
+anycast:msgLibrary=ServerMessageBox
+anycast:isAnycast=y
+
+#ping:msgLibrary=ServerMessageBox
+maxflush=1800;
+maxidle=180;
+digestdbdir=$OCFAROOT/static/hashsets
+#standard directories for windows modules.
+w32proxyworkdir=/var/ocfa/windows
+# user interface stuff
+regexfile=$OCFAROOT/etc/regexes.conf
+categoryfile=$OCFAROOT/etc/categories.conf
+outlookinfile=outlookmain.in
+
+
+#Java modules
+log4j=$OCFAROOT/etc/log4j.properties
+

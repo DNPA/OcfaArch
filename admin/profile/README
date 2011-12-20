@@ -1,0 +1,14 @@
+First start the script using:
+
+./monusage.pl eth0 hda  tempdir
+eth0 the ethernet connection
+hda the connection to the harddisk whose activities you want to monitor.
+
+tempmpdir should not exist.  
+Than start an ocfa run, when finished stop the script with ctrl-c.
+After this do:
+
+cd tempdir
+../monusage.gnuplot
+
+This will create 3 jpg files in the tempdir

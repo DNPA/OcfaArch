@@ -1,0 +1,50 @@
+#The flags that are used when compiling by 'all', and for what no warnings are expected to arise. If warnings
+#arise from these flags your code 'IS' broken.
+GCCFLAGS = -W -pedantic-errors -Wno-long-long -Woverloaded-virtual -Wsign-compare -Wredundant-decls -Wctor-dtor-privacy  -Wnon-virtual-dtor -Wchar-subscripts  -Wcomment -Wformat -Wmissing-braces -Wparentheses -Wtrigraphs -Wunused-function -Wunused-label -Wunused-variable -Wunused-value -Wunknown-pragmas -Wfloat-equal -Wendif-labels -Wreturn-type -Wpacked -Wcast-align -Wpointer-arith -Wcast-qual -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wswitch-enum -Wsign-promo -Wreorder
+
+#flags that fail when using the 5 version of the std lib.
+GCCFLAGS_STDLIB6   = -Wunreachable-code -Wabi
+#flags that fail on both the current (6) version and older version of the std lib.
+GCCFLAGS_STDLIB_OK = -Weffc++
+#flags that fail for the boost serialisation library
+GCCFLAGS_NOBOOST   = -Wconversion -Wshadow -Wunused-parameter -Wundef
+#flags that fail due to use of the FDSET and related marco's
+GCCFLAGS_NOFDSET   = -Wold-style-cast
+
+#Uncomment the folowing line when you are using the 6 version of libstdc++
+#CGGFLAGS += $(GCCFLAGS_STDLIB6)
+
+#When you include this file from a makefile, choose either GCCFLAGS_STRICT to have
+#the compiler help you review your code, or the specific GCCFLAGS_xxxx belonging
+#to the subproject to have the compiler halt on non expected warnings. You should
+#add the chosen GCCFLAGS_xxxx to your CGGFLAGS definition.
+
+GCCFLAGS_STRICT = $(GCCFLAGS_STDLIB_OK) $(GCCFLAGS_STDLIB6) $(GCCFLAGS_NOBOOST) $(GCCFLAGS_NOFDSET) 
+
+GCCFLAGS_MISC = -Werror   
+# MISC BROKEN : $(GCCFLAGS_STDLIB_OK)
+
+GCCFLAGS_EVENT = -Werror 
+# EVENT BROKEN: $(GCCFLAGS_STDLIB_OK) $(GCCFLAGS_NOFDSET)
+
+GCCFLAGS_STORE = -Werror 
+# STORE BROKEN: $(GCCFLAGS_STDLIB_OK)
+
+GCCFLAGS_FS = -Werror 
+# FS BROKEN   :  $(GCCFLAGS_STDLIB_OK)
+
+GCCFLAGS_EVIDENCE= -Werror 
+#EVEDENCE BROKEN: $(GCCFLAGS_STDLIB_OK)
+
+GCCFLAGS_MSG= -Werror
+# MSG BROKEN: $(GCCFLAGS_STDLIB_OK) $(GCCFLAGS_NOBOOST) $(GCCFLAGS_NOFDSET)
+
+GCCFLAGS_MODULE = -Werror 
+#MODULE BROKEN: $(GCCFLAGS_STDLIB_OK)
+
+GCCFLAGS_FACADE = -Werror 
+# FACADE BROKEN: $(GCCFLAGS_STDLIB_OK)
+
+GCCFLAGS += -DDEFAULT_OCFAROOT=\"$(DISTDIR)\"
+
+

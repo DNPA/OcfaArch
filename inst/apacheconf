@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+
+#  The Open Computer Forensics Architecture.
+#  Copyright (C) 2003..2006 KLPD  <ocfa@dnpa.nl>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+$ocfauid=(getpwnam("ocfa"))[2];
+$ocfagid=(getgrnam("ocfa"))[2];
+if (-d "/etc/apache2/sites-enabled.backup") {
+   print "Aparently already reconfigured apache\n";
+   sleep(3);
+   exit;
+}
+if ($ARGV[0] eq "true") {
+ $ans="y";
+} elsif ($ARGV[0] eq "false") {
+ $ans="n";
+} else {
+ print "\n\n\n\n\n\n\n";
+ print "The configuration script wants to attempt to reconfigure your apache webserver configuration.\n";
+ print "It will try to do this by replacing your apache virtual host directory with a symbolic link to\n";
+ print "the ocfa httpd configuration directory /var/ocfa/httpd\n";
+ print "In this directory the ocfa case administration tools will create virtual host configuration files\n";
+ print "You can allow the instalation script to attempt to patch the apache configuration for you, or you\n";
+ print "can choose to reconfigure apache manualy\n\n";
+ $ans="";
+ while (($ans ne "y") && ($ans ne "n")) {
+   print "do you want to this install script to overwrite your apache config ? y/n :";
+   $ans=<>;
+   $ans =~ s/\r//;
+   chomp($ans);
+   $ans=lc($ans);
+ }
+}
+if ($ans eq "n") {
+   print "Skipping apache reconfiguration\n";
+   exit;
+}
+if (-d "/etc/apache2/sites-enabled") {
+  print "Smells like debian\n";
+  rename("/etc/apache2/sites-enabled","/etc/apache2/sites-enabled.backup")|| die "Unable to move away old config\n";
+  symlink("/var/ocfa/httpd","/etc/apache2/sites-enabled")|| die "Unable to symlink /etc/apache2/sites-enabled to /var/ocfa/httpd\n";
+  print "OK, apache configured.\n";
+  unless(-d "/var/ocfa") { mkdir("/var/ocfa",0750); }
+  unless(-d "/var/ocfa/httpd") { mkdir("/var/ocfa/httpd",0750); }
+  chown($ocfauid,$ocfagid,"/var/ocfa","/var/ocfa/httpd");
+  `/etc/init.d/apache2 restart`;
+} else {
+
+  if(-d "/etc/apache2/vhosts.d") {
+     print "\nSmells like SUSI\n";
+     rename("/etc/apache2/vhosts.d","/etc/apache2/sites-enabled.backup")|| die "Unable to move away old config\n";
+     symlink("/var/ocfa/httpd","/etc/apache2/vhosts.d")|| die "Unable to symlink /etc/apache2/vhosts.d to /var/ocfa/httpd\n";
+     print "OK, apache configured.\n";
+     unless(-d "/var/ocfa") { mkdir("/var/ocfa",0750); }
+     unless(-d "/var/ocfa/httpd") { mkdir("/var/ocfa/httpd",0750); }
+     chown($ocfauid,$ocfagid,"/var/ocfa","/var/ocfa/httpd");
+     `/etc/init.d/apache2 restart`;
+  } else {
+     print "\n\n\nERROR: your platform is not recognized, unable to reconfigure apache\n\n\n";
+     my $temp=<>;
+  }
+}
+

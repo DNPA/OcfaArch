@@ -1,0 +1,112 @@
+<dsmconf>
+  <scope name="libocfa">
+    <scalarmeta active="false" scalartype="string">inodetype</scalarmeta>
+    <scalarmeta active="false" scalartype="int">userid</scalarmeta>
+    <scalarmeta active="false" scalartype="string">special-type</scalarmeta>
+    <scalarmeta active="false" scalartype="string">fsentity-type</scalarmeta>
+    <scalarmeta active="true" scalartype="datetime">accesstime</scalarmeta>
+    <scalarmeta active="true" scalartype="datetime">modificationtime</scalarmeta>
+    <scalarmeta active="true" scalartype="datetime">changetime</scalarmeta>
+    <scalarmeta active="false" scalartype="string">fs-type</scalarmeta>
+    <scalarmeta active="false" scalartype="string">special-type</scalarmeta>
+    <scalarmeta active="false" scalartype="int">size</scalarmeta>
+    <scalarmeta active="false" scalartype="string" subtype="bool">groupreadable</scalarmeta>
+    <scalarmeta active="false" scalartype="string" subtype="bool">worldreadable</scalarmeta>
+    <scalarmeta active="true"  scalartype="string" subtype="bool">groupwritable</scalarmeta>
+    <scalarmeta active="false" scalartype="string" subtype="bool">worldwritable</scalarmeta>
+  </scope>
+  <scope name="GENERAL">
+    <scalarmeta active="true" scalartype="string">mimetype</scalarmeta>
+    <scalarmeta active="true" scalartype="string">mimetop</scalarmeta>
+    <scalarmeta active="false" scalartype="string">mimeinfo</scalarmeta>
+    <scalarmeta active="true" scalartype="string">charset</scalarmeta>
+  </scope>
+  <scope name="router">
+    <scalarmeta active="true" scalartype="string">rulelistissue</scalarmeta>
+  </scope>
+  <scope name="file module">
+    <scalarmeta active="true" scalartype="string">fileextension</scalarmeta>
+    <scalarmeta active="true" scalartype="string">oletype</scalarmeta>
+    <scalarmeta active="false" scalartype="string">fileinfo</scalarmeta>
+  </scope>
+  <scope name="digest module">
+    <scalarmeta active="true" scalartype="string">digestsource</scalarmeta>
+    <scalarmeta active="true" scalartype="string">nisttype</scalarmeta>
+    <scalarmeta active="true" scalartype="string">nistproduct</scalarmeta>
+    <scalarmeta active="false" scalartype="int">digestselffirst</scalarmeta>
+    <scalarmeta active="false" scalartype="int">digestselfcount</scalarmeta>
+    <scalarmeta active="false" scalartype="string">referencename</scalarmeta>
+    <scalarmeta active="false" scalartype="string">additionalinfo</scalarmeta>
+  </scope>
+  <scope name="exif module">
+    <scalarmeta active="true" scalartype="string">camerabrand</scalarmeta>
+    <scalarmeta active="true" scalartype="string">cameramodel</scalarmeta>
+    <scalarmeta active="true" scalartype="string">camerasoftware</scalarmeta>
+    <scalarmeta active="false" scalartype="string">imageorientation</scalarmeta>
+    <scalarmeta active="false" scalartype="string">horizontalresolution</scalarmeta>
+    <scalarmeta active="false" scalartype="string">verticalresolution</scalarmeta>
+    <scalarmeta active="true" scalartype="datetime">datetimecreated</scalarmeta>
+    <scalarmeta active="true" scalartype="string">exposuretime</scalarmeta>
+    <scalarmeta active="true" scalartype="string">fnummer</scalarmeta>
+    <scalarmeta active="false" scalartype="string">exposureprogram</scalarmeta>
+    <scalarmeta active="true" scalartype="string">isorating</scalarmeta>
+    <scalarmeta active="false" scalartype="string">exposurebias</scalarmeta>
+    <scalarmeta active="false" scalartype="string">meteringmode</scalarmeta>
+    <scalarmeta active="false" scalartype="string">lightsource</scalarmeta>
+    <scalarmeta active="true" scalartype="string">flash</scalarmeta>
+    <scalarmeta active="true" scalartype="string">focallength</scalarmeta>
+    <scalarmeta active="false" scalartype="string">colorspaceinformation</scalarmeta>
+    <scalarmeta active="false" scalartype="string">width</scalarmeta>
+    <scalarmeta active="false" scalartype="string">height</scalarmeta>
+    <scalarmeta active="false" scalartype="string">compressionsetting</scalarmeta>
+    <scalarmeta active="true" scalartype="string">macromode</scalarmeta>
+  </scope>
+  <scope name="mailwash">
+    <scalarmeta active="true" scalartype="string">invalidheaders</scalarmeta>
+    <scalarmeta active="true" scalartype="string" subtype="email">from</scalarmeta>
+    <arraymeta active="true" scalartype="string" subtype="email">to</arraymeta>
+    <arraymeta active="true" scalartype="string" subtype="email">cc</arraymeta>
+    <scalarmeta active="true" scalartype="string" subtype="email">reply-to</scalarmeta>
+    <scalarmeta active="true" scalartype="string" subtype="email">sender</scalarmeta>
+    <scalarmeta active="true" scalartype="string" subtype="email">envelope-to</scalarmeta>
+    <scalarmeta active="true" scalartype="string">return-path</scalarmeta>
+    <scalarmeta active="true" scalartype="string" subtype="msgid">message-id</scalarmeta>
+    <scalarmeta active="true" scalartype="string" subtype="msgid">in-reply-to</scalarmeta>
+    <arraymeta active="true" scalartype="string" subtype="msgid">references</arraymeta>
+    <scalarmeta active="true" scalartype="datetime">creatime</scalarmeta>
+    <scalarmeta active="true" scalartype="datetime">recvtime</scalarmeta>
+    <scalarmeta active="true" scalartype="datetime">sendtime</scalarmeta>
+    <scalarmeta active="true" scalartype="string">subject</scalarmeta>
+    <scalarmeta active="true" scalartype="string">useragent</scalarmeta>
+    <scalarmeta active="true" scalartype="string">status</scalarmeta>
+    <scalarmeta active="false" scalartype="string" subtype="rfc822">fullfrom</scalarmeta>
+    <arraymeta active="false" scalartype="string" subtype="rfc822">fullto</arraymeta>
+    <arraymeta active="false" scalartype="string" subtype="rfc822">fullcc</arraymeta>
+    <scalarmeta active="false" scalartype="string" subtype="rfc822">fullreply-to</scalarmeta>
+    <scalarmeta active="false" scalartype="string" subtype="rfc822">fullsender</scalarmeta>
+  </scope>
+  <scope name="pdftotext">
+    <scalarmeta active="false" scalartype="string">remarks</scalarmeta>
+  </scope>
+  <scope name="zip">
+    <scalarmeta active="true" scalartype="string">haspassword</scalarmeta>
+    <scalarmeta active="true" scalartype="string">validformat</scalarmeta>
+    <scalarmeta active="false" scalartype="string">partialcorrupted</scalarmeta>
+  </scope>
+  <scope name="pgp">
+    <arraymeta active="true" scalartype="string">keyid</arraymeta>
+    <scalarmeta active="true" scalartype="string">signature</scalarmeta>
+  </scope>
+  <scope name="pkr">
+    <tablemeta active="true" name="pubkeylist">
+       <field active="true" scalartype="string">id</field>
+       <field active="true" scalartype="string">proto</field>
+       <field active="true" scalartype="string">bits</field>
+       <field active="true" scalartype="string">owner</field>
+    </tablemeta>
+  </scope>
+  <scope name="objdump">
+    <scalarmeta active="true" scalartype="string" subtype="bool">packed</scalarmeta>
+    <scalarmeta active="true" scalartype="string">sectionnames</scalarmeta>
+  </scope>
+</dsmconf>

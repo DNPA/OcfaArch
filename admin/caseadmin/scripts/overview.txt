@@ -1,0 +1,46 @@
+This file describes some of the overview related files.
+Currently these scripts don't yet work well given the fact that they
+work on the working database instead of the UI database.
+The parkcase needs to first be rewritten to work on a per item
+incremental basis, what it curently does not before optimal
+cooperation can be achieved. Possibly we will need to work with a single
+database with more different copies of the same data, with one set of
+tables for the backend and one set of copies for the frontend.
+
+dsm2: This version of the DSM creates (on demand) tables that maintain the scalar types
+      as defined in the xml metadata. Further it uses a bit different names for 
+      tables and fields of the metadata tables, what makes it only suitable for the
+      new UI. No plans exist to backport the old UI to the new DSM.
+
+uiconvert.pl: This script updates the old table names and field names from the
+              database to the new ones, and if needed also the other way arround.
+	      It can be used to allow runs of the old DSM to be partialy usable
+	      in the new UI, or to allow the old UI to be used on data created by
+	      the new DSM.
+
+
+overviewgenerics.sql:	defines the UI specific derived tables. Some needed for overviews.
+
+dbcategories.pl: This script fills or updates the metaname table that
+                 indicates what type of scalar each row table holds.
+		 Next to this it parses the dsm.conf and fills the clasification
+		 table stating what source would have created particular types of metadata.
+
+itemoverview.pl: This script updates the distinctstringmeta and the distinctyearmeta tables
+                 for a diven item (uses the item id serial as argument).
+		 These tables are needed to create overviews.
+                 Please note there is a problem with NULL values in these tables that still
+		 needs to be fixed.
+
+itemthumbs.pl:	 This script updates the /var/ocfa/<case>/thumbnail tree and the thumbnails table
+                 in the database for a particular item.
+		 The /var/ocfa/<case>/thumbnail dir will contain the thumbnail version of images found 
+		 in the /var/ocfa/<case>/repository tree.
+
+itemancestor.pl  This script updates the ancestor table for a specific item.
+                 This table can be used to find the data carriing ancestors and descendants of
+		 evidences. It can be used by the sticky category implementation and by the
+		 UI part designed to tackle the SELF digestsource problem. The later could
+		 be done in conjunction with the rowdigestselffirst metadata table.
+
+

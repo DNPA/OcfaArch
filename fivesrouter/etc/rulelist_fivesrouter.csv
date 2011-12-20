@@ -1,0 +1,638 @@
+#New rulelist format must begin like this
+VERSION: 2
+############################################################################################################################################
+#                                                                      default                                                             #
+############################################################################################################################################
+default:
+#Each new node MUST have a nodetype defined
+nodetype 	META not_exists; 								ACT_FORWARD;		broken_no_nodetype;
+#Emergency brake for infinate derivation.
+parentcount 	MORE 89; 									ACT_FORWARD; 		broken_rulelistloop;
+#Check if the new node has data content by checking if there is a sha1 hash.
+nodetype	SMATCH	dir;									ACT_COMMIT;		dsm;	#PH: get rid of dirs
+datasha1 	META exists;									ACT_JUMP;		processdatanode;
+datasha1 	META not_exists;   								ACT_JUMP;   		processnondatanode;
+#Neither processdatanode nor processnondatanode should ever return.
+DNTCR    	SMATCH  DNTCR;  								ACT_FORWARD;     	broken_rulelist;
+
+############################################################################################################################################
+#                       Processing of node's without data, that is, without any datasha1                                                   #
+############################################################################################################################################
+#Process nodes without a data entity attached to it.
+processnondatanode:
+#We are forgiving for deleted node's as these may be marked as file (what they were before deletion) while they are now without content.
+isdeleted 	EQUAL 1;									ACT_COMMIT;		dsm;
+#The following nodes can validly be withour content
+nodetype  	SMATCH emptyfile;								ACT_COMMIT;     	dsm;
+nodetype  	SMATCH dir;     								ACT_COMMIT;     	dsm;
+nodetype  	SMATCH softlink;     								ACT_COMMIT;     	dsm;
+nodetype  	SMATCH fifo;     								ACT_COMMIT;     	dsm;
+nodetype  	SMATCH characterdevice;     							ACT_COMMIT;     	dsm;
+nodetype  	SMATCH blockdevice;     							ACT_COMMIT;     	dsm;
+nodetype  	SMATCH socket;     								ACT_COMMIT;     	dsm;
+nodetype  	SMATCH whiteout;     								ACT_COMMIT;     	dsm;
+nodetype  	SMATCH vtmeta;     								ACT_COMMIT;     	dsm;
+nodetype  	SMATCH filesystem;     								ACT_COMMIT;     	dsm;
+nodetype  	SMATCH libtsk3_virtual;     							ACT_COMMIT;     	dsm;
+nodetype  	SMATCH pseudodir;     								ACT_COMMIT;     	dsm;
+#The undefined nodetype should not actually get used.
+nodetype  	SMATCH undefined;     								ACT_COMMIT;     	broken_undef_nodetype;
+#The following nodes should come with some data!
+nodetype  	SMATCH file;									ACT_FORWARD;		broken_bogusdatanode;
+nodetype  	SMATCH alternatestream;  							ACT_FORWARD;    	broken_bogusdatanode;
+nodetype  	SMATCH swap;  									ACT_FORWARD;    	broken_bogusdatanode;
+nodetype  	SMATCH disk-image/no-ptable;  							ACT_FORWARD;    	broken_bogusdatanode;
+nodetype  	SMATCH disk-image/empty-ptable;  						ACT_FORWARD;    	broken_bogusdatanode;
+nodetype  	SMATCH unallocateddiskspace;  							ACT_FORWARD;    	broken_bogusdatanode;
+nodetype  	SMATCH slack;  									ACT_FORWARD;    	broken_bogusdatanode;
+nodetype  	SMATCH disk-image;  								ACT_FORWARD;    	broken_bogusdatanode;
+nodetype  	SMATCH diskpartition;  								ACT_FORWARD;    	broken_bogusdatanode;
+#Any other value for nodetype is invalid.
+DNTCR     	SMATCH  DNTCR; 									ACT_FORWARD;		broken_invalidnodetype;
+############################################################################################################################################
+#                       Processing of node's with data, that is, with a datasha1                                                           #
+############################################################################################################################################ 
+#Process nodes with a data entity attached to it.
+processdatanode:
+#The following nodes are invalid if they come with data.
+nodetype  	SMATCH emptyfile; 								ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH dir; 									ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH softlink; 								ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH fifo; 									ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH characterdevice; 							ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH blockdevice; 								ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH socket; 									ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH whiteout; 								ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH vtmeta; 									ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH filesystem; 								ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH libtsk3_virtual; 							ACT_FORWARD;    	broken_bogusnodedata;
+nodetype  	SMATCH pseudodir; 								ACT_FORWARD;    	broken_bogusnodedata;
+#The undefined nodetype should not actually get used.
+nodetype  	SMATCH undefined;     								ACT_COMMIT;     	broken_undef_nodetype;
+#Process other node types according to their type.
+nodetype  	SMATCH file; 									ACT_JUMP; 		processfile;
+nodetype  	SMATCH alternatestream; 							ACT_JUMP; 		processfile;
+nodetype  	SMATCH swap; 									ACT_JUMP; 		processswap;
+nodetype  	SMATCH disk-image/no-ptable; 							ACT_JUMP; 		procesnoptableimage;
+nodetype  	SMATCH disk-image/empty-ptable; 						ACT_JUMP; 		processemptyptableimage;
+nodetype  	SMATCH unallocateddiskspace; 							ACT_JUMP; 		processunalloc;
+nodetype  	SMATCH slack; 									ACT_JUMP; 		processslack;
+nodetype  	SMATCH disk-image; 								ACT_JUMP; 		processdiskimage;
+nodetype  	SMATCH diskpartition; 								ACT_JUMP; 		processdiskpartition;
+#Any other value for nodetype is invalid.
+DNTCR     	SMATCH  DNTCR; 									ACT_FORWARD;     	broken_invalidnodetype;
+################################################################################################################################################
+#                                Processing of regular files (deleted or undeleted) and alternate streams                                      #
+################################################################################################################################################
+#Process file and alt streams.
+processfile:
+#If an empty file is marked to be a file with a zero size content this is not what we want.
+datasha1  		SMATCH da39a3ee5e6b4b0d3255bfef95601890afd80709; 			ACT_FORWARD;    	broken_zerohashdatanode;
+#Some often seen almost empty files that we are never interested in.
+datasha1  		SMATCH adc83b19e793491b1c6ea0fd8b46cd9f32e592fc; 			ACT_COMMIT;     	dsm;
+datasha1  		SMATCH ba8ab5a0280b953aa97435ff8946cbcbb2755a27; 			ACT_COMMIT;     	dsm;
+evidencelocation        SMATCH  Thumbs.db;                              			ACT_JUMP;    		processthumbs;
+evidencelocation        SMATCH  index.dat;                              			ACT_JUMP;    		processindexdat;
+parent_module           SMATCH  strings;                                			ACT_JUMP;    		indexonly;
+parent_module           SMATCH  antiword;                               			ACT_JUMP;    		indexonly;
+parent_module           SMATCH  pdftotext;                              			ACT_JUMP;    		indexonly;
+# The outlook and outlook express modules produce useless logs, don't process these.
+evidencelocation        SMATCH  .log
+  AND parent_module       SMATCH  outlook;                                			ACT_COMMIT;     	dsm;
+# Send other files from the outlook/dbxsplit modules and files from mailsplit to mailwash.
+parent_module           SMATCH  outlook;                                			ACT_JUMP;    		processeml;
+parent_module           SMATCH  mailsplit;                              			ACT_JUMP;    		processeml;
+parent_module           SMATCH  dbxsplit;                               			ACT_JUMP;    		processeml;
+#For kickstart we shall assume more often that a file is a disk image.
+previous_module 	SMATCH kickstart; 							ACT_JUMP; 		extraimagecheck;
+#Process the file according to if a mimetype was defined on creation.
+mimetype 		META not_exists;   							ACT_JUMP; 		processuntypedfile;
+mimetype 		META exists;   								ACT_JUMP; 		processtypedfile;
+DNTCR           	SMATCH  DNTCR;                                                          ACT_FORWARD;            broken_shouldneverhapen;
+##################################################################################################################################################
+#                           Processing of regular files for what the creator did not specify a mimetype                                          #
+##################################################################################################################################################
+#Processing of files for what the creator didn't specify a type.
+processuntypedfile:
+#Let the file module look at what type of file this is.
+DNTCR     	SMATCH  DNTCR; 									ACT_FORWARD; 		file;
+#File should give back a mimetype, if it doesn't file is broken.
+mimetype 	META not_exists;   								ACT_FORWARD; 		broken_nomimefromfilemodule;
+#If we have an oletype, process according to that.
+oletype 	META exists; 									ACT_JUMP; 		processbyoletype;
+#Otherwise process the same as a file that was typed by its creator..
+mimetype 	META exists;									ACT_JUMP;		processtypedfile;
+DNTCR           SMATCH  DNTCR;                                                          	ACT_FORWARD;            broken_shouldneverhapen;
+###################################################################################################################################################
+#                         Processing of regular files for what the creator specified a mimetype                                                   #
+###################################################################################################################################################
+#Process files that are typed either by their creator or by file.
+processtypedfile:
+#First lets look if this file is known in any of our hash sets and send it off to the digest module.
+DNTCR     	SMATCH  DNTCR; 									ACT_FORWARD; 		digest;
+#The digest module should set a digestsource, if it doesn't its broken.
+digestsource 	META not_exists; 								ACT_FORWARD; 		broken_nosourcefromdigestmodule;
+#Check if the file is known and stop if it is.
+digestsource    SMATCH NIST;                                                                    ACT_COMMIT;             dsm;
+digestsource    SMATCH KP;                                                                      ACT_COMMIT;             dsm;
+digestsource    SMATCH MALL;                                                                    ACT_COMMIT;             dsm;
+#If the file is marked to be utf8 encoded, run utf8blocks
+encoding	SMATCH utf8; 									ACT_FORWARD;		missingmodule_utf8blocks;
+#The file isn't known in any of the hash sets, check by mimetype/fileinfo to see if we know how to process.
+mimetype        SMATCH application/x-rar;                                                       ACT_JUMP;               processrarfile;
+mimetype        SMATCH image/jpeg;                                                              ACT_JUMP;               processjpegfile;
+mimetype        SMATCH application/msword;                                                      ACT_JUMP;               processofficefile;
+fileinfo        SMATCH Microsoft Office Document;                                               ACT_JUMP;               processofficefile;
+mimetype        SMATCH application/pgp-signature;                                               ACT_JUMP;               processpgpsignature;
+mimetype        SMATCH x-gnupg-keyring;                                                         ACT_JUMP;               processpgpkeyring;
+mimetype        SMATCH application/pgp;                                                         ACT_JUMP;               processpgpfile;
+mimetype        SMATCH text/PGP;                                                                ACT_JUMP;               processpgpfile;
+mimetype        SMATCH text/pgp;                                                                ACT_JUMP;               processpgpfile;
+mimetype        SMATCH text/GnuPG;                                                              ACT_JUMP;               processpgpfile;
+mimetype        SMATCH application/x-ocfa-outlook-express;                                      ACT_JUMP;               processdbx;
+mimetype        SMATCH message/rfc822;                                                          ACT_JUMP;               processmailormailbox;
+mimetype        SMATCH text/x-mail;                                                             ACT_JUMP;               processmailormailbox;
+mimetype        SMATCH text/mail;                                                               ACT_JUMP;               processmailormailbox;
+mimetype        SMATCH text/x-news;                                                             ACT_JUMP;               processnews;
+mimetype        SMATCH text/news;                                                               ACT_JUMP;               processnews;
+mimetype        SMATCH application/x-ocfa-outlook;                                              ACT_JUMP;               processpst;
+mimetype        SMATCH application/x-compress;                                                  ACT_JUMP;               processcompress;
+mimetype        SMATCH  application/x-zip;                                                      ACT_JUMP;               processzip;
+mimetype        SMATCH application/x-gzip;                                                      ACT_JUMP;               processgzip;
+mimetype        SMATCH application/gzip;                                                        ACT_JUMP;               processgzip;
+mimetype        SMATCH application/x-tar;                                                       ACT_JUMP;               processtar;
+mimetype        SMATCH application/tar;                                                         ACT_JUMP;               processtar;
+mimetype        SMATCH application/x-gtar;                                                      ACT_JUMP;               processtar;
+mimetype        SMATCH application/x-bzip;                                                      ACT_JUMP;               processbzip;
+mimetype        SMATCH application/bzip;                                                        ACT_JUMP;               processbzip;
+mimetype        SMATCH application/x-bzip2;                                                     ACT_JUMP;               processbzip;
+mimetype        SMATCH application/bzip2;                                                       ACT_JUMP;               processbzip;
+mimetype        SMATCH application/pdf;                                                         ACT_JUMP;               processpdf;
+mimetype        SMATCH application/x-dosexec;                                                   ACT_JUMP;               processexe;
+mimetype        SMATCH application/dosexec;                                                     ACT_JUMP;               processexe;
+mimetype        SMATCH text/xml;                                                                ACT_JUMP;               processxml;
+mimetype        SMATCH application/xml;                                                         ACT_JUMP;               processxml;
+fileinfo        SMATCH x-ocfa-xmlutf16LE;                                                       ACT_JUMP;               processutf16;
+fileinfo        SMATCH filesystem;                                                              ACT_JUMP;               processdiskpartition;
+fileinfo        SMATCH partition;                                                               ACT_JUMP;               processdiskimage;
+fileinfo        SMATCH boot sector;                                                             ACT_JUMP;               processdiskimage;
+fileinfo        SMATCH SQLite;                                                                  ACT_JUMP;               processsqlite;
+fileinfo        SMATCH VMWare;                                                                  ACT_JUMP;               processvirtimg;
+fileinfo        SMATCH COW file;                                                                ACT_JUMP;               processvirtimg;
+fileextension   SMATCH doc;                                                                     ACT_JUMP;               processofficefile;
+fileextension   SMATCH xls;                                                                     ACT_JUMP;               processofficefile;
+fileextension   SMATCH eml;                                                                     ACT_JUMP;               processeml;
+fileextension   SMATCH pst;                                                                     ACT_JUMP;               processpst;
+fileextension   SMATCH dbx;                                                                     ACT_JUMP;               processdbx;
+fileextension   SMATCH mbx;                                                                     ACT_JUMP;               processmbx;
+fileextension   SMATCH pgp;                                                                     ACT_JUMP;               processpgporpkr;
+fileextension   SMATCH pkr;                                                                     ACT_JUMP;               processpgpkeyring;
+fileextension   SMATCH gpg;                                                                     ACT_JUMP;               processpgporpkr;
+fileextension   SMATCH asc;                                                                     ACT_JUMP;               processpgporpkr;
+fileextension   SMATCH part;                                                                    ACT_JUMP;               processdiskpartition;
+fileextension   SMATCH qcow;                                                                    ACT_JUMP;               processvirtimg;
+fileextension   SMATCH qcow2;                                                                   ACT_JUMP;               processvirtimg;
+#If this returns also, check if our node is any taste of text and process that as such.
+mimetype  	SMATCH text; 									ACT_JUMP; 		processothertext;
+#Check against mimetypes that we skip on purpose.
+DNTCR     	SMATCH  DNTCR; 									ACT_JUMP; 		checkcrapcontent;
+#If this returns also, this means our rulelist is incomplete.
+DNTCR     	SMATCH  DNTCR; 									ACT_FORWARD; 		broken_rulelist;
+
+#####################################################################################################################################################
+#                          Processing of files for what the file module determined an oletype                                                       #
+#####################################################################################################################################################
+#Process the node containing an MS office file based on its ole type.
+processbyoletype:
+oletype 	SMATCH WordDocument; 								ACT_JUMP; 		processwordfile;
+oletype 	SMATCH Excel; 									ACT_JUMP; 		processexcelfile;
+oletype 	SMATCH PowerPoint; 								ACT_JUMP; 		processpowerpoint;
+oletype 	SMATCH Visio; 									ACT_JUMP; 		processvisiofile;
+oletype 	SMATCH DNTCR; 									ACT_JUMP;		processofficefile;
+#############################################################################################################################################
+#                                 These are the mime types we know we don't process in any way.                                             #
+#############################################################################################################################################
+checkcrapcontent:
+mimetype 	SMATCH application/octet-stream; 						ACT_COMMIT; 		dsm;
+mimetype 	SMATCH application; 								ACT_COMMIT; 		dsm;
+mimetype 	SMATCH image; 									ACT_COMMIT; 		dsm;
+mimetype 	SMATCH audio; 									ACT_COMMIT; 		dsm;
+mimetype 	SMATCH video; 									ACT_COMMIT; 		dsm;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 	dsm;
+#############################################################################################################################################
+#             For kickstart, use the extensions crv/img/IMG/dd/DD/iso/ISO/raw/RAW as indication that the file is a disk image.              #
+#############################################################################################################################################
+extraimagecheck:
+evidencelocation 	SMATCH .crv; 								ACT_JUMP;		processdiskimage;
+evidencelocation 	SMATCH .img; 								ACT_JUMP;		processdiskimage;
+evidencelocation 	SMATCH .IMG; 								ACT_JUMP;		processdiskimage;
+evidencelocation 	SMATCH .dd; 								ACT_JUMP;		processdiskimage;
+evidencelocation 	SMATCH .DD; 								ACT_JUMP;		processdiskimage;
+evidencelocation 	SMATCH .iso; 								ACT_JUMP;		processdiskimage;
+evidencelocation 	SMATCH .ISO; 								ACT_JUMP;		processdiskimage;
+evidencelocation 	SMATCH .raw; 								ACT_JUMP;		processdiskimage;
+evidencelocation 	SMATCH .RAW; 								ACT_JUMP;		processdiskimage;
+mimetype                META not_exists;                                                        ACT_JUMP;               processuntypedfile;
+mimetype                META exists;                                                            ACT_JUMP;               processtypedfile;
+DNTCR                   SMATCH  DNTCR;                                                          ACT_FORWARD;            broken_shouldneverhapen;
+#############################################################################################################################################
+#                                          Unknown type MS-office files                                                                     #
+#############################################################################################################################################
+processofficefile:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		antiword;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		strings;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		ole2txt;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		excel;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_officefile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+
+#############################################################################################################################################
+#                                                       MS Powerpoint                                                                       #
+#############################################################################################################################################
+#Processing of office files that hold a powerpoint presentation. We don't have any special module for this
+#so we send it off to the generic ole2txt and strings module.
+processpowerpoint:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		strings;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		ole2txt;
+validformat 	EQUAL 0; 									ACT_FORWARD; 		broken_powerpointfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 		dsm;
+
+#############################################################################################################################################
+#                                                       MS Visio                                                                            #
+#############################################################################################################################################
+#Processing of office files that hold a visio drawing file. We don't have any special module for this
+#so we send it off to the generic ole2txt and strings module.
+processvisiofile:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		strings;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		ole2txt;
+validformat 	EQUAL 0;									ACT_FORWARD;		broken_visiofile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                             MS Word                                                                       #
+#############################################################################################################################################
+#Processing of a word wordprocessor file.
+processwordfile:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		antiword;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_wordfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		strings;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                            MS Excel                                                                       #
+#############################################################################################################################################
+#Processing of an excel spreadsheet file
+processexcelfile:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		ole2txt;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		excel;
+validformat 	EQUAL 0; 									ACT_FORWARD; 		broken_excelfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 		dsm;
+#############################################################################################################################################
+#                                                                  RAR                                                                      #
+#############################################################################################################################################
+#Processing of a rar archive file
+processrarfile:
+DNTCR   	SMATCH  DNTCR;									ACT_FORWARD; 		ocfarar;
+validformat 	EQUAL 0; 									ACT_FORWARD; 		broken_rarfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 		dsm;
+#############################################################################################################################################
+#                                                                JPEG                                                                       #
+#############################################################################################################################################
+#Processing of a jpeg image file
+processjpegfile:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		exif;
+validformat 	EQUAL 0; 									ACT_FORWARD; 		broken_jpgfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		fivesfaces;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 		dsm;
+#############################################################################################################################################
+#                                                       Unknown PGP/PKR                                                                      #
+#############################################################################################################################################
+#Processing of something that might either be a PGP crypto file or a PGP keyring.
+processpgporpkr:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		pgp;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		pkr;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 		dsm;
+#############################################################################################################################################
+#                                                       PGP signature file                                                                  #
+#############################################################################################################################################
+#Processing of a PGP signature file
+processpgpsignature:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		pgp;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                       PGP Public keyring                                                                  #
+#############################################################################################################################################
+#Processing of a PGP public keyring file.
+processpgpkeyring:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		pgp;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		pkr;
+validformat 	EQUAL 0; 									ACT_FORWARD; 		broken_pkrfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 		dsm;
+#############################################################################################################################################
+#                                                          PGP crypto file                                                                  #
+#############################################################################################################################################
+#Processing of a PGP crypto file.
+processpgpfile:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		pgp;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_pgpfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                           Something that is either a mailbox or a single eml                                              #
+#############################################################################################################################################
+#Processing of something that might be either an e-mail or a mbox format mailbox.
+processmailormailbox:
+#Try to run mailsplit on the file, this will work if its a mailbox.
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		mailsplit;
+#If mailsplit indicates that this is an invalid format, run mailwash on the file.
+validformat 	EQUAL 0; 									ACT_FORWARD;		mailwash;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                             EML                                                                           #
+#############################################################################################################################################
+#Process a regular email file.
+processeml:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		mailwash;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_emlfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                           NNTP Newsfeed                                                                   #
+#############################################################################################################################################
+#Process news messages.
+processnews:
+#Process news as if it is e-mail, we have nothing better at this point.
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		mailsplit;
+validformat 	EQUAL 0; 									ACT_FORWARD;		mailwash;
+DNTCR   	SMATCH  DNTCR;									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                              DBX                                                                          #
+#############################################################################################################################################
+#Process a dbx file from outlook express
+processdbx:
+DNTCR   	SMATCH  DNTCR;									ACT_FORWARD;		dbxsplit;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_dbxfile;
+DNTCR   	SMATCH  DNTCR; ACT_COMMIT; dsm;
+#############################################################################################################################################
+#                                                             MS MBX                                                                        #
+#############################################################################################################################################
+#Process an outlook express mbx file 
+processmbx:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		mbx2mbox;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_mbxfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                               MS PST                                                                      #
+#############################################################################################################################################
+#Process a pst file from outlook
+processpst:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		outlook;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_pstfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                                  Z                                                                        #
+#############################################################################################################################################
+#Process a zlib compressed file.
+processcompress:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		7z;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_compressfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                                GZIP                                                                       #
+#############################################################################################################################################
+#Process a gzip zipped file.
+processgzip:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		gzip;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_gzipfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                                ZIP                                                                        #
+#############################################################################################################################################
+processzip:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		zip;
+haspassword     SMATCH  DNTCR;                          					ACT_FORWARD;    	manualreview;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_zipfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                               TAR                                                                  #
+#############################################################################################################################################
+#Process a tar tape archive file.
+processtar:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		tar;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_tarfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                             BZIP(2)                                                                       #
+#############################################################################################################################################
+#Process a bzip(2) file.
+processbzip:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		bzip;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_bzipfile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                              PDF                                                                          #
+#############################################################################################################################################
+#Process a pdf file
+processpdf:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		pdftotext;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		missingmodule_pdfinfo;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_pdffile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                              EXE                                                                          #
+#############################################################################################################################################
+#Process a windows exe file.
+processexe:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		objdump;
+validformat 	EQUAL 0; 									ACT_FORWARD;		broken_exefile;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                              XML                                                                          #
+#############################################################################################################################################
+#Process xml data.
+processxml:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		indexer;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                       Any remaining text format                                                           #
+#############################################################################################################################################
+#Process any type of text.
+processothertext:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		indexer;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                              UTF16                                                                        #
+#############################################################################################################################################
+#Process utf16 text.
+processutf16:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		utf16le2utf8;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                            SWAP partition                                                                 #
+#############################################################################################################################################
+#Process a swap partition.
+processswap:
+#Send the file to the carver, a smale change we will get something here.
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		carver;
+#Also send the file to the strings module.
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		strings;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                      Disk-image with no partition table                                                   #
+#############################################################################################################################################
+#Processing of a disk image with no partition tangle on it.
+procesnoptableimage:
+#Process the diskimage as if it was a partition itself.
+DNTCR   	SMATCH  DNTCR; 									ACT_JUMP;		processdiskpartition;
+
+#Process a disk image that does have a partition table, but does not have any entries within that partition table.
+#############################################################################################################################################
+#                                         Disk image with a partition table without any entries                                             #
+#############################################################################################################################################
+processemptyptableimage:
+#Send the image to the carver.
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		carver;
+#Also send it to the strings module.
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		strings;
+#We should also have a gpart module for stuff like this
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		missingmodule_gpart;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                     Unnalocated block from filesystem                                                     #
+#############################################################################################################################################
+#Processing of unallocated space from a filesystem.
+processunalloc:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		carver;
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		strings;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                            File slack                                                                     #
+#############################################################################################################################################
+#Processing of file slack
+processslack:
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;		dsm;
+#############################################################################################################################################
+#                                                          Disk image                                                                       #
+#############################################################################################################################################
+#Processing of whole disk images.
+processdiskimage:
+#Either uncomment the following line, or the two consecutive ones.
+#DNTCR   SMATCH  DNTCR; ACT_FORWARD snorkel
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;		fsstat;
+FileSystemType 	META exists; 									ACT_JUMP; 		processfilesystem;
+FileSystemType 	META not_exists; 								ACT_FORWARD; 		mmls;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 		dsm;
+
+#############################################################################################################################################
+#                                                 Disk partition (or disk image with no partition table)                                    #
+#############################################################################################################################################
+#Process single partitions.
+processdiskpartition:
+#First determine if we have a filesystem
+partitioninfo	META exists; 									ACT_JUMP;		processmmlsdiskpartition;
+partitioninfo   META not_exists; 								ACT_JUMP;		processrawpartition;
+
+#############################################################################################################################################
+#                                                      Partition with identified filesystem on it                                           #
+#############################################################################################################################################
+#Processing of a partition or disk image that we know holds a file system.
+processfilesystem:
+FileSystemType  SMATCH  FAT;                                    				ACT_FORWARD;    	tskfs;
+FileSystemType  SMATCH  ISO9660;                                				ACT_FORWARD;    	tskfs;
+FileSystemType  SMATCH  NTFS;                                   				ACT_FORWARD;    	tskfs;
+FileSystemType  SMATCH  HFSX;                                   				ACT_FORWARD;    	tskfs;
+FileSystemType  SMATCH  HFS+;                                   				ACT_FORWARD;    	tskfs;
+FileSystemType  SMATCH  Ext2;                                   				ACT_FORWARD;    	tskfs;
+FileSystemType  SMATCH  Ext3;                                   				ACT_FORWARD;    	tskfs;
+FileSystemType  SMATCH  UFS 1;                                  				ACT_FORWARD;    	tskfs;
+FileSystemType  SMATCH  UFS 2;                                  				ACT_FORWARD;    	tskfs;
+FileSystemType  SMATCH  Unknown;                                				ACT_FORWARD;    	missingmodule_loopmount;
+#DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 		blkls;		#PH: disabled due to problems and time consumption
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 		dsm;
+
+#############################################################################################################################################
+#                                              Partition that MMLS said nothing about                                                       #
+#############################################################################################################################################
+processrawpartition:
+#First determine if we have a filesystem
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 	fsstat;
+#If we do process the file sytsem.
+FileSystemType	META exists;									ACT_JUMP; 	processfilesystem;
+#Otherwise use the carver.
+FileSystemType 	META not_exists; 								ACT_FORWARD;	carver;
+#Make sure there are no valid filesystems further on the partition/disk image
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD; 	missingmodule__gpart;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 	dsm;
+
+#############################################################################################################################################
+#                                              Partition that MMLS gave some info on                                                        #
+#############################################################################################################################################
+processmmlsdiskpartition:
+#Partition types that tend to be useless
+partitioninfo   SMATCH  (0x05);                                 				ACT_COMMIT;     dsm;
+partitioninfo   SMATCH  (0x0F);                                 				ACT_COMMIT;     dsm;
+partitioninfo   SMATCH  (0x85);                                 				ACT_COMMIT;     dsm;
+partitioninfo   SMATCH  (0xF2);                                 				ACT_COMMIT;     dsm;
+#Partition types that don't contain filesystems
+partitioninfo   SMATCH  (0x00);                                 				ACT_FORWARD;    strings;
+partitioninfo   SMATCH  (0x0A);                                 				ACT_FORWARD;    strings;
+partitioninfo   SMATCH  (0x82);                                 				ACT_FORWARD;    strings;
+partitioninfo   SMATCH  (0xB8);                                 				ACT_FORWARD;    strings;
+partitioninfo   SMATCH  (0xDA);                                 				ACT_FORWARD;    strings;
+#Partition types that are likely to contain filesystems the sleuthkit can handle.
+partitioninfo   SMATCH  (0x01);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x04);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x06);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x07);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x0B);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x0C);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x0E);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x14);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x16);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x17);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x1B);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x1C);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x1E);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x83);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x84);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0x9F);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0xA5);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0xA6);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0xA8);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0xA9);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0xBF);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0xC1);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0xC4);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0xC6);                                 				ACT_FORWARD;    fsstat;
+partitioninfo   SMATCH  (0xBE);                                 				ACT_FORWARD;    missingmodule_loopmount;
+partitioninfo   SMATCH  (0xBF);                                 				ACT_FORWARD;    missingmodule_loopmount;
+partitioninfo   SMATCH  (0xEB);                                 				ACT_FORWARD;    missingmodule_loopmount;
+#Other partition types are not supported by the sleuthkit fs module.
+partitioninfo   SMATCH  DNTCR;                                  				ACT_FORWARD;    carver;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT; 	dsm;
+
+#############################################################################################################################################
+#                                                          Thumbs db                                                                        #
+#############################################################################################################################################
+processthumbs:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;	vinettocfa;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;	dsm;
+#############################################################################################################################################
+#                                                          Index.dat                                                                        #
+#############################################################################################################################################
+processindexdat:
+DNTCR   	SMATCH  DNTCR;									ACT_FORWARD;	pasco;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;	dsm;
+#############################################################################################################################################
+#                                                  Anything that only needs indexing                                                        #
+#############################################################################################################################################
+indexonly:
+DNTCR   	SMATCH  DNTCR; 									ACT_FORWARD;	indexer;
+DNTCR   	SMATCH  DNTCR; 									ACT_COMMIT;	dsm;
+#############################################################################################################################################
+#                                              Virtuual disk images from vmware etc                                                         #
+#############################################################################################################################################
+processvirtimg:
+DNTCR   	SMATCH  DNTCR;									ACT_FORWARD;	qemuimg;
+DNTCR   	SMATCH  DNTCR;									ACT_COMMIT;	dsm;
+
+#PH: just a dummy label since I dont know what should be done to these files
+processsqlite:
+DNTCR SMATCH DNTCR; ACT_COMMIT; dsm;
+

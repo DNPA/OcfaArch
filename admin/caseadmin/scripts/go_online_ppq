@@ -1,0 +1,14 @@
+#!/bin/bash
+ONLINEPPQ="/var/ocfa/queues/${OCFACASE}"
+OFFLINEPPQ="/var/ocfa/cases/${OCFACASE}/offline/ppq"
+if [ -d "$OFFLINEPPQ" ]
+then
+    if [ -d "$ONLINEPPQ" ]
+    then
+        echo "Error: Target directory exists"
+    else
+        mv "$OFFLINEPPQ" "$ONLINEPPQ"
+    fi
+else
+    echo "The investigation ${OCFACASE} isn't offline"
+fi

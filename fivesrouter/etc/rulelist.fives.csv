@@ -1,0 +1,17 @@
+#New rulelist format must begin like this
+VERSION: 2 
+
+#evidencelocation	SMATCH	/evidence;	ACT_FORWARD;	namematch;
+
+default:
+
+evidencelocation        SMATCH   .crv;          ACT_JUMP;	slutet;
+inodetype		SMATCH	file;		ACT_FORWARD;	namematch;
+inodetype		SMATCH	dir;		ACT_COMMIT;	dsm;
+
+slutet:
+
+DNTCR			SMATCH	DNTCR;	ACT_COMMIT;	dsm;
+
+
+

@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+
+
+<project name="findmissinginindex" default="compile" basedir=".">
+<property name="classpath" value="/usr/java/lucene.jar;/usr/java/postgresql-8.0-317.jdbc3.jar"/>
+<property name="jardictjar" value="build/showdict.jar" />
+
+<target name="compile" description="compiles all basefiles">
+	<javac srcdir="src"
+	       debug="on"	 
+               destdir="build"
+	       classpath="${classpath}"/>
+</target>
+
+<target name="run" description="runs test" depends="compile">
+     <java classpath="${classpath};build"
+           classname="FindMissingInIndex" output="index.html" logError="true">
+       <arg value="joep" />
+       <arg value="/var/ocfa/joep/midas"/>
+       <arg value="machine1"/>
+       <arg value="windows" />
+</java>
+</target>
+
+</project>

@@ -1,0 +1,25 @@
+This directory contains a set of 3 python scripts that can be used for regression testing.
+Before making a major change to the OCFA code-base or a rule-list, doing an OCFA run
+with a test item would create a reference item in the database. After making the major change
+the some item is run again, a regressiontest item will be available in the database.
+The tools we have in this directory allows us to compare these two items in order to
+get a digest of the differences between the two item runs.
+
+The tool OcfaDbDigest.py will create an xml digest of each item in a given database.
+Given that there are some modules that are known to produce 'false' or 'instable' meta data
+(timestamps of for example the sleuthkit module are set to time of extraction instead of
+times on the filesystem that data is being extracted from). To keep this false and instable 
+meta out of the digest, the tool has an optional second commandline argument that designates
+the location of an 'ignore list'.
+
+If digest xml files are available for both the reference run item and the regression run item,
+these two digest files can be compared using two tools.
+
+The tool 'digestcompare.py' will do a shalow compare of all files derived and of the routes these
+files followed. Before it starts it will compare the input files of both digests, and will abandon
+if these are not exactly the same. 
+
+The tool 'digestcomparedeep.py' will do a deep compare of all meta-data of the intersection of all files
+(input and derived).
+
+

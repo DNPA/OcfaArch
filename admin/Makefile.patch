@@ -1,0 +1,10 @@
+2c2
+< SUBTARGETS=caseadmin ocfahalt
+---
+> SUBTARGETS=caseadmin ocfahalt ocfarecover
+7d6
+< 
+10c9
+< 	make -C ocfahalt install	
+---
+> 	make -C ocfahalt install

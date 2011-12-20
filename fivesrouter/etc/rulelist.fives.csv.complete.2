@@ -1,0 +1,302 @@
+#New rulelist format must begin like this
+VERSION: 2
+
+# tab == 8 spaces
+
+#Assumptions:
+# SMATCH/NOSMATCH is case sensitive (because old one seems to be)
+# <previous_module/parent_module/last_module> SMATCH <modulename>; uses substring matching as usual
+# using <previous_module/parent_module/last_module> with a numerical operator results in undefined behaviour
+#
+# Rules for writing rules:
+# DNTCR <operator> <whatever>; evaluates to true
+# <metadata> SMATCH DNTCR; requires <metadata> to exist, but no specific value
+# <metadata> META exists; requires <metadata> to exist, but no specific value
+# <metadata> META not_exists; requires <metadata> to not exist
+# <DNTCR/previous_module/parent_module/last_module> META exists; is always true
+# <DNTCR/previous_module/parent_module/last_module> META not_exists; is always false
+# <previous_module/parent_module/last_module> NOSMATCH <modulename>; is true if evidence never been at module <modulename>
+# <whatever> META <operand>; can never be true unless <operand> is either "exists" or "not_exists"
+
+#
+# Available operators:
+# SMATCH - case sensitive substring match
+# NOSMATCH - case sensitive substring mismatch
+# LESS - numerical comparison
+# MORE - numerical comparison
+# EQUAL - numerical comparison
+# NOTEQUAL - numerical comparison
+# META - use as "<metadataname> META <exists or not_exists>". Evaluates whether meta data <metadataname> exists or not for evidence
+#
+# an evidence can have a maximum of ONE mimetype meta data (like text/GnuPG) (otherwise, a reorder of mimetype/fileinfo rules is required) important?
+
+
+default:
+
+#handle files
+inodetype			SMATCH	file;					ACT_JUMP;	label_files;
+# If the evidence from an fs is new but not a file (dir symlink etc, than we
+# have nothing we can do with it.
+inodetype			SMATCH	DNTCR;					ACT_COMMIT;	dsm;	
+# handle pseudo dirs
+nodetype			SMATCH	pseudodir;				ACT_COMMIT;	dsm;
+# Otherwise treat it as a new data.
+nodetype			SMATCH	diskimage;				ACT_FORWARD;	mmls;
+nodetype			SMATCH	disk-image/empty-ptable;		ACT_FORWARD;	fixmegpart;
+nodetype			SMATCH	unallocateddiskspace;			ACT_FORWARD;	photorec;
+nodetype			SMATCH	disk-image/no-ptable;			ACT_FORWARD;	fsstat;
+nodetype			SMATCH	vtmeta;					ACT_FORWAARD;	dsm;
+
+
+
+#if it is not a file, dir or pseudodir, try as partition
+
+
+label_partitions:
+#Partition types that tend to be useless
+partitioninfo 			SMATCH 	(0x05); 				ACT_COMMIT; 	dsm;
+partitioninfo 			SMATCH 	(0x0F); 				ACT_COMMIT; 	dsm;
+partitioninfo 			SMATCH 	(0x85); 				ACT_COMMIT; 	dsm;
+partitioninfo 			SMATCH 	(0xF2); 				ACT_COMMIT; 	dsm;
+
+#Partition types that don't contain filesystems
+partitioninfo 			SMATCH 	(0x00); 				ACT_FORWARD; 	strings;
+partitioninfo 			SMATCH 	(0x0A); 				ACT_FORWARD; 	strings;
+partitioninfo 			SMATCH 	(0x82); 				ACT_FORWARD; 	strings;
+partitioninfo 			SMATCH 	(0xB8); 				ACT_FORWARD; 	strings;
+partitioninfo 			SMATCH 	(0xDA); 				ACT_FORWARD; 	strings;
+
+#Partition types that are likely to contain filesystems the sleuthkit can handle.
+partitioninfo 			SMATCH 	(0x01); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x04); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x06); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x07); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x0B); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x0C); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x0E); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x14); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x16); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x17); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x1B); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x1C); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x1E); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x83); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x84); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0x9F); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0xA5); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0xA6); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0xA8); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0xA9); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0xBF); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0xC1); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0xC4); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0xC6); 				ACT_FORWARD; 	fsstat;
+partitioninfo 			SMATCH 	(0xBE); 				ACT_FORWARD; 	fixmeloopmount;	
+partitioninfo 			SMATCH 	(0xBF); 				ACT_FORWARD; 	fixmeloopmount;
+partitioninfo 			SMATCH 	(0xEB); 				ACT_FORWARD; 	fixmeloopmount;
+
+#Other partition types are not supported by the sleuthkit fs module.
+partitioninfo			SMATCH	DNTCR;					ACT_FORWARD;	fixmephotorec;
+
+
+
+###################################################################
+# Processing based on filessytems determined by fsstat            #
+###################################################################
+filesystemtype			SMATCH	FAT;					ACT_FORWARD;	fixmetskfs;
+filesystemtype			SMATCH	ISO9660;				ACT_FORWARD;	fixmetskfs;
+filesystemtype			SMATCH	NTFS;					ACT_FORWARD;	fixmetskfs;
+filesystemtype			SMATCH	HFSX;					ACT_FORWARD;	fixmetskfs;
+filesystemtype			SMATCH	HFS+;					ACT_FORWARD;	fixmetskfs;
+filesystemtype			SMATCH	Ext2;					ACT_FORWARD;	fixmetskfs;
+filesystemtype			SMATCH	Ext3;					ACT_FORWARD;	fixmetskfs;
+filesystemtype			SMATCH	UFS 1;					ACT_FORWARD;	fixmetskfs;
+filesystemtype			SMATCH	UFS 2;					ACT_FORWARD;	fixmetskfs;
+filesystemtype			SMATCH	Unknown;				ACT_FORWARD;	fixmeloopmount;
+
+# and we're done with filesystem
+DNTCR				SMATCH DNTCR;					ACT_COMMIT;	dsm;
+
+
+
+
+
+
+
+
+
+
+label_files:
+###################################################################
+# empty files and files containing only one or a few useless      #
+# characters like \n or \r\n                                      #
+###################################################################
+# empty file
+datasha1			  SMATCH da39a3ee5e6b4b0d3255bfef95601890afd80709; ACT_COMMIT; dsm;
+# file with just a newline.
+datasha1			  SMATCH adc83b19e793491b1c6ea0fd8b46cd9f32e592fc; ACT_COMMIT; dsm;
+# file with just a CR/NL.
+datasha1			  SMATCH ba8ab5a0280b953aa97435ff8946cbcbb2755a27; ACT_COMMIT; dsm;
+
+
+###################################################################
+# Processing of images that are entered directly                  #
+###################################################################
+evidencelocation		SMATCH	.crv;					ACT_FORWARD;	mmls;
+evidencelocation		SMATCH	.CRV;					ACT_FORWARD;	mmls;
+evidencelocation		SMATCH	.img;					ACT_FORWARD;	mmls;	
+evidencelocation		SMATCH	.IMG;					ACT_FORWARD;	mmls;
+evidencelocation		SMATCH	.dd;					ACT_FORWARD;	mmls;
+evidencelocation		SMATCH	.DD;					ACT_FORWARD;	mmls;
+evidencelocation		SMATCH	.e01;					ACT_FORWARD;	mmls;
+evidencelocation		SMATCH	.E01;					ACT_FORWARD;	mmls;
+evidencelocation		SMATCH	.aff;					ACT_FORWARD;	mmls;
+evidencelocation		SMATCH	.AFF;					ACT_FORWARD;	mmls;
+evidencelocation		SMATCH	.iso;					ACT_FORWARD;	fsstat;
+evidencelocation		SMATCH	.ISO;					ACT_FORWARD;	fsstat;
+evidencelocation		SMATCH	.raw;					ACT_FORWARD;	mmls;
+evidencelocation		SMATCH	.RAW;					ACT_FORWARD;	mmls;
+#Unallocated data from the sleuthkit module:
+evidencelocation		SMATCH	data.slack;				ACT_FORWARD;	strings;
+evidencelocation		SMATCH	data.unaloc;				ACT_FORWARD;	photorec;
+evidencelocation		SMATCH	Thumbs.db;				ACT_FORWARD;	vinettocfa;
+evidencelocation		SMATCH	index.dat;				ACT_FORWARD;	pasco;
+
+
+
+#newfiles
+# New non empty files from text processing modules should go to the indexer.
+parent_module			SMATCH	strings;				ACT_FORWARD;	indexer;
+parent_module			SMATCH	antiword;				ACT_FORWARD;	indexer;
+parent_module			SMATCH	pdftotext;				ACT_FORWARD;	indexer;
+
+# Files created by the sleuthkit that were part of a filesystem should be processed normally.
+evidencepath			SMATCH	/ROOTDIR
+	AND parent_module	SMATCH	sleuthkit;				ACT_FORWARD;	digest;	
+# Non FS sleuthkit files should go to the carver.
+parent_module			SMATCH	sleuthkit
+	AND			NOSMATCH /ROOTDIR;				ACT_FORWARD;	photorec;
+# The outlook and outlook express modules produce useless logs, don't process these.
+evidencelocation		SMATCH	.log
+	AND parent_module 	SMATCH	outlook;				ACT_COMMIT;	dsm;
+# Send other files from the outlook/dbxsplit modules and files from mailsplit to mailwash.
+parent_module			SMATCH	outlook;				ACT_FORWARD;	mailwash;
+parent_module			SMATCH	mailsplit;				ACT_FORWARD;	mailwash;
+parent_module			SMATCH	dbxsplit;				ACT_FORWARD;	mailwash;
+# Some processing based on fsentity-type, not used much but for the encase export kickstart.
+fsentity-type			SMATCH	image;					ACT_FORWARD;	mmls;
+fsentity-type			SMATCH	swap;					ACT_FORWARD;	strings;
+fsentity-type			SMATCH	unallocatednode;			ACT_FORWARD;	photorec;
+
+
+#All other new files get processed normally
+inodetype			SMATCH	file;					ACT_FORWARD;	digest;
+
+
+###################################################################
+# Use the digest source to determine what to process and what not #
+###################################################################
+digestsource			SMATCH	NIST;					ACT_COMMIT;	dsm;
+digestsource			SMATCH	KP;					ACT_COMMIT;	dsm;
+digestsource			SMATCH	MALL;					ACT_COMMIT;	dsm;
+#Uncomment the folowing line if you want all unique data to only get processed ones
+# for any given investigation. Results in a faster run, but more dificult searches.
+#digestsource			SMATCH SELF;					ACT_COMMIT;	dsm;
+
+# evidence not having a mimetype from the parent module get mimetype here
+inodetype			SMATCH	file
+	AND	mimetype	META	not_exists;				ACT_FORWARD;	file;
+
+###################################################################
+# Process new or existing evidence based on mime type.            #
+###################################################################
+mimetype			SMATCH	text/x-ocfa-mailheaders; 		ACT_COMMIT;	dsm;
+mimetype			SMATCH	text/x-ocfa-mail; 			ACT_FORWARD;	mailwash;
+
+mimetype			SMATCH	application/bzip;			ACT_FORWARD;	bzip;
+#mimetype			SMATCH	application/bzip2;			ACT_FORWARD;	bzip; 
+mimetype			SMATCH	application/compress;			ACT_FORWARD;	gzip;
+mimetype			SMATCH	application/dosexec;			ACT_FORWARD;	objdump;
+mimetype			SMATCH	application/gzip;			ACT_FORWARD;	gzip;
+mimetype			SMATCH	application/msword;			ACT_FORWARD;	antiword;
+mimetype			SMATCH	application/pgp-signature; 		ACT_FORWARD;	pgp;  
+mimetype			SMATCH	application/pgp
+	AND mimetype		NOSMATCH application/pgp-signature;		ACT_FORWARD;	pkr;
+mimetype			SMATCH	application/pdf;			ACT_FORWARD;	pdftotext;
+mimetype			SMATCH	application/tar;			ACT_FORWARD;	tar;
+mimetype			SMATCH	application/x-compress;			ACT_FORWARD;	7z; 
+mimetype			SMATCH	application/x-zip;			ACT_FORWARD;	zip;
+mimetype			SMATCH	application/x-bzip;			ACT_FORWARD;	bzip;
+#mimetype			SMATCH	application/x-bzip2;			ACT_FORWARD;	bzip;
+mimetype			SMATCH	application/x-gtar;			ACT_FORWARD;	tar;
+mimetype			SMATCH	application/x-gnupg-keyring;		ACT_FORWARD;	pkr;
+mimetype			SMATCH	application/x-tar;			ACT_FORWARD;	tar;
+mimetype			SMATCH	application/x-dosexec;			ACT_FORWARD;	objdump;
+mimetype			SMATCH	application/x-gzip;			ACT_FORWARD;	gzip;
+mimetype			SMATCH	application/x-ocfa-mail;		ACT_FORWARD;	mailwash;
+mimetype			SMATCH	application/x-ocfa-outlook-express;	ACT_FORWARD;	dbxsplit;
+mimetype			SMATCH	application/x-ocfa-outlook
+	AND mimetype		NOSMATCH application/x-ocfa-outlook-express;	ACT_FORWARD;	outlook;
+mimetype			SMATCH	application/x-rar;			ACT_FORWARD;	ocfarar; 
+mimetype			SMATCH	application/zip;			ACT_FORWARD;	zip;
+mimetype			SMATCH	image/jpeg;				ACT_FORWARD;	exif;
+mimetype			SMATCH	message/rfc822;				ACT_FORWARD;	mailsplit;
+mimetype			SMATCH	text/GnuPG;				ACT_FORWARD;	pgp;
+#mimetype			SMATCH	text/GnuPG;				ACT_FORWARD;	pkr;	  #should this really go to both pkr and pgp ? In the old rulelist it seems that only the first rule (pgp) can be matched but the other one (pkr) is also there
+mimetype			SMATCH	text/mail;				ACT_FORWARD;	mailsplit;
+mimetype			SMATCH	text/news;				ACT_FORWARD;	mailsplit;
+mimetype			SMATCH	text/PGP;				ACT_FORWARD;	pgp;
+#mimetype			SMATCH	text/PGP;				ACT_FORWARD;	pkr;
+mimetype			SMATCH	text/x-ocfa-mail;			ACT_FORWARD;	mailwash;
+mimetype			SMATCH	text/x-mail;				ACT_FORWARD;	mailsplit;
+mimetype			SMATCH	text/x-news;				ACT_FORWARD;	mailsplit;
+# two catch-the-rest rules catching all 'text' mimetypes not mentioned above
+mimetype			SMATCH	text
+	AND last_module		SMATCH	file;					ACT_FORWARD;	indexer;  
+mimetype			SMATCH	text
+	AND last_module		SMATCH	mailwash;				ACT_FORWARD;	indexer;
+#at this point, we have sent the evidence through the digest module already, hence, e.g, the 
+## nwcontenttypekp;DNTCR;mimetype;text/x-ocfa-mail;DNTCR;		ACT_FORWARD;digest;mailwash
+## has already been at the digest and should now go directly to mailwash (-> no need for arguments!)
+fileinfo			SMATCH	Microsoft Office Document; 		ACT_FORWARD;	antiword;
+fileinfo			SMATCH	filesystem;				ACT_FORWARD;	fsstat;
+fileinfo			SMATCH	partition;				ACT_FORWARD;	fsstat;
+
+#If a zip file has a password, we don't have a module for that, send it to the dummy manualreview module.
+haspassword			SMATCH	DNTCR;					ACT_FORWARD;	manualreview;
+
+
+#########################################################################
+# If all else fails, use the file extension to route on                 #
+#########################################################################
+fileextension			SMATCH	eml 
+	AND previous_module 	NOSMATCH mailwash;				ACT_FORWARD;	mailwash;
+fileextension			SMATCH	pst
+	AND previous_module	NOSMATCH outlook;				ACT_FORWARD;	outlook;
+fileextension			SMATCH	dbx
+	AND previous_module	NOSMATCH dbxsplit;				ACT_FORWARD;	dbxsplit;
+fileextension			SMATCH	pgp
+	AND previous_module	NOSMATCH pkr;					ACT_FORWARD;	pkr;
+fileextension			SMATCH	pkr
+	AND previous_module	NOSMATCH pkr;					ACT_FORWARD;	pkr;
+fileextension			SMATCH	gpg
+	AND previous_module	NOSMATCH pkr;					ACT_FORWARD;	pkr;
+fileextension			SMATCH	ask
+	AND previous_module	NOSMATCH pgp;					ACT_FORWARD;	pgp;
+fileextension			SMATCH	part
+	AND previous_module	NOSMATCH photorec;				ACT_FORWARD;	photorec;
+
+#########################################################################
+# Content types that are not currently parsable or usable or are jus to #
+# broad to do anything with at this point.                              #
+#########################################################################
+# Note: many of these types can be about anything. We need modules to do a better
+# job on these than the file module does
+mimetype			SMATCH	application/octet-stream; 		ACT_COMMIT;	dsm;
+mimetype			SMATCH	application;				ACT_COMMIT;	dsm;
+mimetype			SMATCH	image;					ACT_COMMIT;	dsm;
+mimetype			SMATCH	audio;					ACT_COMMIT;	dsm;
+mimetype			SMATCH	video;					ACT_COMMIT;	dsm;
+
+#finally, commit
+DNTCR				SMATCH	DNTCR;					ACT_COMMIT;	dsm;

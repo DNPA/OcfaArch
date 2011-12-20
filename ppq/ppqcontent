@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+use XML::DOM;
+
+sub parseMessageXml {
+   my ($host,$module,$subject,$handle)=();
+   my ($parser,$xmldata)=@_;
+   my $doc=$parser->parse($xmldata);
+   my $nodes = $doc->getElementsByTagName ("evidence");
+   if ($nodes->getLength) {
+	my $node = $nodes->item (0);
+	my ($textnode)= $node->getChildNodes;
+	$handle=$textnode->getNodeValue;
+        my $subj = $node->getAttributeNode ("subject");
+	$subject=$subj->getValue;
+   }
+   my $nodes = $doc->getElementsByTagName ("sender");
+   if ($nodes->getLength) {
+        my $node = $nodes->item (0);
+	my $hostnode = $node->getAttributeNode ("host");
+	$host=$hostnode->getValue;
+        my $modulenode= $node->getAttributeNode ("module");
+	$module=$modulenode->getValue;
+   }
+   return ($host,$module,$subject,$handle);
+}
+
+my $parser= new XML::DOM::Parser;
+
+
+$case=$ENV{"OCFACASE"};
+if (($case =~ /\.\./) || ($case =~ /\//) || ($case =~ /\`/) || ($case =~ /\|/)) {
+  $case="";
+}
+$prio=$ENV{"QUERY_STRING"}+0;
+$module=$ENV{"PATH_INFO"};
+if ($module =~ /^\/(\w+)/) {
+  $module=$1;
+} else {
+  $module="";
+} 
+$ok= $module && $case;
+$title="Persisten Priority Queue listing case=$case module=$module prio=$prio";
+print "Content-Type: text/html\n\n";
+print "<HTML><HEAD><TITLE>$title</TITLE></HEAD><BODY><H3>$title</H3>\n";
+if ($ok) {
+  $ppqbase="/var/ocfa/queues/${case}/${module}/${prio}.";
+  $status=$ppqbase . "status";
+  $fifo=$ppqbase . "fifo";
+  if (open(STATUS,$status)) {
+    $readcount=read(STATUS,$buf,4096); 
+    if ($readcount != 32) {
+      print "Error: Invalid status file\n";
+    } else {
+       ($rfindex,$h1,$wfindex,$h2,$rfskip,$h3,$fifosize,$h4)=unpack('LLLLLLLL',$buf);
+       if ($h1 || $h2 || $h3 || $h4) {
+          print "<H3>WARNING: this tool is 32 bits, invalid 64 bit to 32 bit cast detected</H3>";
+       }
+       if ($fifosize == 0) {
+          $history="recent";
+          if ($rfindex == 1) {
+            $history="full";
+          }
+          print "<H2>No active messages, showing $history history !!</H3>";
+          $rfskip=0;
+       }
+       print "<TABLE border=\"1\">\n";
+       print "<TR><TH>SenderHost</TH><TH>SenderModule</TH><TH>Subject</TH><TH>MetadataHandle</TH></TR>\n";
+       foreach $index ($rfindex .. $wfindex) {
+          $ffile=$fifo . "/" . $index . ".dat";
+          if (sysopen(READFIL,$ffile,O_RDONLY)) {
+             while(sysread(READFIL,$buf2,8)== 8) {
+                ($msgsize)=unpack('LL',$buf2);
+                if (sysread(READFIL,$buf3,$msgsize) == $msgsize) {
+		  chop($buf3);
+                  if ($rfskip  <= 0) {
+		     my ($host,$module,$subject,$handle)=parseMessageXml($parser,$buf3);
+		     print "<TR><TD>$host</TD><TD>$module</TD><TD>$subject</TD><TD><A HREF=\"../evidenceid.cgi?metaid=$handle\">$handle</A></TD></TR>\n";
+                  }
+                }
+                if ($rfskip > 0) {
+                   $rfskip--;
+                }
+             }
+          }
+          $rfskip=0;
+       }
+       print "</TABLE>\n";
+    }
+  } else {
+    print "<h4>Problem opening $status</h4>\n";
+  } 
+} else {
+   print "ERROR: invalid case ($case) or module ($module) name.\n";
+}
+print "</HTML>\n";
+

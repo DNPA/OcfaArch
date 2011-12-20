@@ -1,0 +1,154 @@
+# !!!!! DONT USE THIS FILE FOR DEVELOPMENT, USE FOR DELOYMENT ONLY !!!!!!
+# Standard stuff.
+#
+SHELL=/bin/sh
+INSTALL=install
+
+#
+GCCFLAGS = -W -pedantic-errors -Wno-long-long -Woverloaded-virtual -Wundef -Wsign-compare -Wredundant-decls -Wconversion -Wold-style-cast -Wformat-nonliteral -Wshadow -Wformat-security -Wunused-parameter -Wswitch-enum -Wsign-promo -Wfloat-equal -Wformat -Wctor-dtor-privacy  -Wnon-virtual-dtor -Wchar-subscripts  -Wcomment -Wmissing-braces -Wparentheses -Wtrigraphs -Wunused-function -Wunused-label -Wunused-value -Wunknown-pragmas -Wendif-labels -Wreturn-type -Wpacked -Wcast-align -Wpointer-arith  -Wwrite-strings -Wreorder -Wconversion -Wshadow -Wformat-security -Wunused-parameter -Wold-style-cast  -Wunused-variable -Wcast-qual -Wformat -Wswitch-enum -Wfloat-equal
+GCCFLAGS = -W -Wno-long-long
+GCCFLAGS_STRICT = 
+
+
+GCCFLAGS_ROUTER =  -Werror 
+#ROUTER UNSUP : -Weffc++ -Wunreachable-code 
+
+GCCFLAGS_PPQ = -Werror 
+#PPQ UNSUP : -Weffc++ -Wunreachable-code
+
+GCCFLAGS_ANYCAST = -Werror 
+# ANYCAST UNSUP : -Weffc++  -Wunreachable-code
+
+GCCFLAGS_DSM = -Werror 
+#DSM UNSUP : -Weffc++ -Wunreachable-code
+
+GCCFLAGS_MIDAS = -Werror
+#MIDAS UNSUP : -Weffc++ -Wunreachable-code
+
+GCCFLAGS_SHOWTREE = -Werror
+#SHOWTREE UNSUP: -Weffc++ -Wunreachable-code
+
+GCCFLAGS_KICK = -Werror
+#KICK UNSUP: -Weffc++ 
+
+GCCFLAGS_SETLL = -Werror
+#SETLL UNSUP: -Weffc++  -Wsign-promo
+
+GCCFLAGS_HALT = -Werror
+#HALT UNSUP: -Weffc++
+
+GCCFLAGS_ADM =  -Werror
+#ADM UNSUP: -Weffc++ 
+DISTDIR=/usr/local/digiwash
+
+#Now include the OS configuration stuff
+include $(OCFAARCH_TOP_DIR)/OS.makeinfo
+
+
+LIBTOOL=/usr/bin/libtool
+#
+# version number this is used to create some directoreis
+#
+VERSION=2.3
+RELEASE=$(VERSION).0
+
+#
+# The main  installation directory in which all stuff will be put.
+# shared library files will be put in subdir lib, executables in subdir lib
+# and executables that should be executed from other executables in libexec
+# according to GNU standards this should be called prefix 
+#
+PREFIX=/usr/lib/ocfa$(VERSION)
+#
+# place where the html doc for this project is put when installing.
+HTML_DOCDIR=$(HTML_PREFIX)/$(PROJECT)
+
+#
+# place where html doc is put when created.
+LOCAL_HTML=doc/generated/html
+
+#
+# defines the location of doxygen
+DOXYGEN=/usr/local/bin/doxygen
+
+#
+#The source dir defines the directory in which you have put your source.
+SRCDIR=src
+
+INCDIR=inc
+#SRCDIR=src
+#
+# The Build Dir defines the directory in which all newly created stuff should be put.
+#
+BUILDDIR=build
+#Directory in which all test code is located.
+
+TESTDIR=test
+
+# INCFLAGS contains the header files.
+# Note: /usr/lib is not a typo, this is a workaround for a bug in the debian etch libclucene-dev package.
+INCFLAGS=-I $(DISTDIR)/inc -I $(SUBDIR)inc -I /usr/lib  -I$(BOOSTINCDIR)
+MISCLIB=$(INSTALLIB)/libocfamisc.la
+TREEGRAPHLIB=$(INSTALLIB)/libocfatreegraph.la
+FSLIB=$(INSTALLIB)/libocfafs.la
+EVIDENCELIB=$(INSTALLIB)/libocfaevidence.la
+MESSAGELIB=$(INSTALLIB)/libocfamessage.la
+MODULELIB=$(INSTALLIB)/libocfamodule.la
+FACADELIB=$(INSTALLIB)/libocfafacade.la
+STORELIB=$(INSTALLIB)/libocfastore.la
+OCFALIBS=$(MISCLIB) $(TREEGRAPHLIB) $(FSLIB) $(EVIDENCELIB) $(MESSAGELIB) $(MODULELIB) $(FACADELIB) $(STORELIB)
+
+#
+# default install in INSTALL_SBIN, but can be overruled.
+#
+INSTALL_DIR=$(INSTALL_SBIN)
+
+all: $(PROJECT)
+
+
+# This rules tells Make that in order to make an object file, it should
+# compile the file with the corresponding name in the src directory.
+#
+$
+$(BUILDDIR)/%.lo: $(SRCDIR)/%.cpp $(INCDIR)/%.hpp
+	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR);fi
+	echo INCFlags are $(INCFLAGS)
+	$(LIBTOOL) --tag=CPP --mode=compile g++ -ggdb -c $(GCCFLAGS) $(INCFLAGS) -o $@ $<
+
+
+#
+# same rule as above, except this one will not look at the header file.
+#
+$(BUILDDIR)/%.lo: $(SRCDIR)/%.cpp 
+	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR);fi
+	echo INCFlags are $(INCFLAGS)
+	$(LIBTOOL) --tag=CPP --mode=compile g++ -ggdb -c $(GCCFLAGS) $(INCFLAGS) -o $@ $<
+
+
+
+
+# Target that runs the executable for the test
+#
+check: all
+	#cd test
+	$(MAKE) -w -C test run
+	#cd ..
+
+checkfault: all
+	$(MAKE) -w -C test debug
+
+
+# Target that automagically creates documentation in html and man pages for the source
+# in this project.
+#
+clean: 
+	if [ -d doc/generated ]; then rm -r doc/generated; fi
+	if [ -d build/.libs ]; then rm -rf build/.libs; fi
+	/usr/bin/find build/ -maxdepth 1 -type f -exec rm  \{\} \;
+	#$(MAKE) -w -C test clean
+
+dpkg: 
+	echo make dpkg has not yet been implemented for OcfaArch
+
+cl:
+	        cvs2cl --fsf -d

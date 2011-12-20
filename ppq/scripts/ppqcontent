@@ -1,0 +1,110 @@
+#!/usr/bin/perl
+use XML::DOM;
+
+sub parseMessageXml {
+   my ($host,$module,$subject,$handle,$type)=();
+   my ($parser,$xmldata)=@_;
+   my $doc=$parser->parse($xmldata);
+   $addinfo="NON";
+   $handle="NON";
+   $type="UNSUPPORTED";
+   my $nodes = $doc->getElementsByTagName ("evidence");
+   if ($nodes->getLength) {
+	my $node = $nodes->item (0);
+	my ($textnode)= $node->getChildNodes;
+	$handle=$textnode->getNodeValue;
+        my $subj = $node->getAttributeNode ("subject");
+	$subject=$subj->getValue;
+        $type="evidence";
+   } else {
+      $nodes = $doc->getElementsByTagName ("system");
+      if ($nodes->getLength) {
+         my $node = $nodes->item (0);
+         my ($textnode)= $node->getChildNodes;
+         $handle=$textnode->getNodeValue;
+         my $subj = $node->getAttributeNode ("subject");
+         $subject=$subj->getValue;
+         $type="system";
+      }
+   }
+   $nodes = $doc->getElementsByTagName ("sender");
+   if ($nodes->getLength) {
+        my $node = $nodes->item (0);
+	my $hostnode = $node->getAttributeNode ("host");
+	$host=$hostnode->getValue;
+        my $modulenode= $node->getAttributeNode ("module");
+	$module=$modulenode->getValue;
+   }
+   return ($host,$module,$subject,$handle,$type);
+}
+
+my $parser= new XML::DOM::Parser;
+
+
+$case=$ENV{"OCFACASE"};
+if (($case =~ /\.\./) || ($case =~ /\//) || ($case =~ /\`/) || ($case =~ /\|/)) {
+  $case="";
+}
+$prio=$ENV{"QUERY_STRING"}+0;
+$module=$ENV{"PATH_INFO"};
+if ($module =~ /^\/(\w+)/) {
+  $module=$1;
+} else {
+  $module="";
+} 
+$ok= $module && $case;
+print "Content-type: text/xml\n\n";
+print "<?xml version=\"1.0\"?>\n";
+if ($ok) {
+  $ppqbase="/var/ocfa/queues/${case}/${module}/${prio}.";
+  $status=$ppqbase . "status";
+  $fifo=$ppqbase . "fifo";
+  if (open(STATUS,$status)) {
+    $readcount=read(STATUS,$buf,4096); 
+    if ($readcount != 32) {
+      print "<?xml-stylesheet type=\"text/xsl\" href=\"/error.xsl\" ?>\n";
+      print "   <error msg=\"Invalid status file\"></error>\n";
+    } else {
+       print "<?xml-stylesheet type=\"text/xsl\" href=\"/ppqcontent.xsl\" ?>\n";
+       print "<fifo case=\"$case\" module=\"$module\" prio=\"$prio\">\n";
+       ($rfindex,$h1,$wfindex,$h2,$rfskip,$h3,$fifosize,$h4)=unpack('LLLLLLLL',$buf);
+       if ($h1 || $h2 || $h3 || $h4) {
+          print "   <warning>This tool is 32 bits, invalid 64 bit to 32 bit cast detected</warning>";
+       }
+       if ($fifosize == 0) {
+          $history="recent";
+          if ($rfindex == 1) {
+            $history="full";
+          }
+	  print "   <history type=\"$history\" />\n";
+          $rfskip=0;
+       }
+       foreach $index ($rfindex .. $wfindex) {
+          $ffile=$fifo . "/" . $index . ".dat";
+          if (sysopen(READFIL,$ffile,O_RDONLY)) {
+             while(sysread(READFIL,$buf2,8)== 8) {
+                ($msgsize)=unpack('LL',$buf2);
+                if (sysread(READFIL,$buf3,$msgsize) == $msgsize) {
+		  chop($buf3);
+                  if ($rfskip  <= 0) {
+		     my ($host,$module,$subject,$handle,$type)=parseMessageXml($parser,$buf3);
+		     print "   <message host=\"$host\" sender=\"$module\" subject=\"$subject\" type=\"$type\">$handle</message>\n";
+                  }
+                }
+                if ($rfskip > 0) {
+                   $rfskip--;
+                }
+             }
+          }
+          $rfskip=0;
+       }
+       print "</fifo>\n";
+    }
+  } else {
+    print "<error msg=\"Problem opening $status\"></error>\n";
+  } 
+} else {
+   print "<?xml-stylesheet type=\"text/xsl\" href=\"/error.xsl\" ?>\n";
+   print "<error msg=\"invalid case ($case) or module ($module) name.\"></error>\n";
+}
+

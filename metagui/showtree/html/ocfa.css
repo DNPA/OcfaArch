@@ -1,0 +1,124 @@
+html, body {
+    margin:0px;
+    padding:0px;
+    height:100%;
+}
+body {
+    font-family : Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    background-color: #F0F0F0;
+    color: #787878;
+  }
+
+
+/**** Div'jes **************************************************************/
+div.wrapper {
+    background-color: #FFFFFF;
+    width: 900px;
+    height: auto;
+    position: absolute;
+    top: 0px;
+    left: 50%;
+    margin-top: 0px;
+    margin-left: -450px;
+  }
+
+
+div.head {
+    /*border: 5px;border-color: #000000;border-style: solid;*/
+    position: relative;
+    background: #fff url(img/ocfa.png) no-repeat top left;
+    width: 885px;
+    height: 100px;
+    margin-left: 5px;
+    margin-right: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+  
+div.nav {
+    position: relative;
+    left: 110px;
+    top: 30px;
+    height: 26px;
+}
+
+div.meta {
+    /*border: 5px;border-color: #000000;border-style: solid;*/
+    position: relative;
+    top: 5px;
+    width: 885px;
+    margin-left: 5px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+  }
+
+div.children {
+    position: relative;
+    top: 5px;
+    width: 885px;
+    margin-left: 5px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+div.case_admin {
+    position: absolute;
+    left: 655px;
+    width: 220px;
+    top: 15px;
+    background: #F0F0F0;
+}
+
+div.head h1, h2 {
+    position: relative;
+    left: 110px;
+    
+}
+
+/**** A-tag within header */
+div.nav a {
+    font-size : 12px;
+    background-color : #D8D8D8;
+    color : #787878;
+    display : block;
+    float : left;
+    height : 20px;
+    margin-right : 2px;
+    margin-bottom:3px;
+    padding: 1px;
+    text-decoration : none;
+    width : auto;
+  }
+div.nav a:hover {
+    font-size : 12px;
+    background-color: #FFFFFF;
+    float: left;
+    color: #787878;
+    text-decoration: none;
+    height: 20px;
+    width: auto;
+    margin-right : 2px;
+    margin-bottom:3px;
+    padding: 1px;
+    display: block;
+  }
+
+
+
+/**** Tables **************************************************************/
+table {
+   border: 1px;
+   background-color: #D8D8D8;
+   border-color: #A0A0A0;
+}
+
+tr {
+   background-color: #ffffff;
+}
+tr:hover {
+   background-color: #D8D8D8;
+}
+
+th {
+   background-color: #D8D8D8;
+}

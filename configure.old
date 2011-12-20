@@ -1,0 +1,219 @@
+#!/usr/bin/perl
+
+#  The Open Computer Forensics Architecture.
+#  Copyright (C) 2003..2006 KLPD  <ocfa@dnpa.nl>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+open(MAKEINFO,">configure.makeinfo");
+$uname=lc(`uname`);
+chomp($uname);
+$libtool="libtool";
+if ($uname eq "linux") {
+  print "Linux\nSetting DLINUX flag\n";
+  print MAKEINFO "GCCFLAGS += -DLINUX\n";
+} elsif ($uname eq "sunos") {
+  print "Solaris\nSetting flags for big endiannes";
+  print MAKEINFO "GCCFLAGS += -DBIG_ENDIAN=1 -DBYTE_ORDER=1\n";
+  print "Seting /usr/sfw/include as aditional path to look for crypt inc dir\n";
+  print MAKEINFO "INCCRYPTDIR=-I/usr/sfw/include\n";
+  print "Seting as aditional path to look for crypt libs\n";
+  print MAKEINFO "LIBCRYPTDIR=-L/usr/sfw/lib\n";
+} elsif ($uname eq "osx") {
+  print "OS X\nSeting glibtool\n";
+  $libtool="glibtool";
+} else {
+  print "WARNING: Unknown OS\n";
+}
+print MAKEINFO "LIBTOOL=$libtool\n";
+#Dont think this hurts anything
+print MAKEINFO "GCCFLAGS += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE\n";
+if ((-e "/usr/include/iconv.h") && (-e "/usr/local/include/iconv.h")) {
+  print "!! WARNING !! : Two versions of iconv.h found, possible bad configuration\n";
+  print "                you may need to rename /usr/local/include/iconv.h in order to\n";
+  print "                prefent it from being used\n";
+}
+open(IH,"/usr/include/iconv.h") ||open(IH,"/usr/local/include/iconv.h") || die "Unable to open /usr/include/iconv.h for parsing\n";
+$consticonv=0;
+while(<IH>) {
+  if (/size_t.*const/) {
+    $consticonv=1;
+  }
+}
+close(IH);
+if ($consticonv) {
+  print "iconv buffers are set as const\n";
+  print MAKEINFO "GCCFLAGS += -DCONST_ICONV_INBUF\n";
+} else {
+  print "default (non const) iconv buffers\n";
+}
+$needlibiconv=1;
+$lbs="";
+opendir(LIB,"/lib")|| die "Can not read the /lib dir";
+while($file=readdir(LIB)) {
+  if ($file =~ /^libc.so/) {
+     open(OBJDUMP,"objdump -T /lib/$file|")|| die "Unable to open /lib/$file with objdump\n";
+     while(<OBJDUMP>) {
+        if (/\siconv$/) {
+           $needlibiconv=0;
+	}
+     }
+  }
+}
+$foundiconv=0;
+$foundclucene=0;
+$foundocfalib=0;
+$foundcgicc=0;
+$founddb=0;
+foreach $libdir ("/usr/lib","/usr/local/lib","/usr/local/digiwash2.0/lib") {
+  opendir(LIB,$libdir)|| die "Can not read the /usr/lib dir";
+  while($file=readdir(LIB)) {
+    if ($file =~ /^lib(boost_regex.*)\.a/) {
+       $lbs="$1";
+    }
+    if (file =~ /^libiconv/) {
+       $foundiconv=1;
+    }
+    if ($file =~ /^libclucene/) {
+       $foundclucene=1;
+    }
+    if ($file =~ /^libocfa/) {
+       $foundocfalib=1;
+    }
+  }
+}
+$configok=1;
+if (!$foundocfalib) {
+   print "ERROR: OcfaLib does not seem to be installed\n";
+   $configok=0;
+}
+if ($neediconv) {
+  unless ($foundiconv) {
+     print "ERROR: no iconv found in libc and no libiconv found\n";
+     $configok=0;
+  }
+} else {
+  if ($foundiconv) {
+    print "!! WARNING !!: iconv is found in libc but you also have libiconv installed\n";
+    print "               you may need to manualy edit your configure.makeinfo or revert\n";
+    print "               to defining or uncommenting a custom makinfo file in OS.makeinfo.\n"; 
+  }
+}
+unless ($foundclucene) {
+  print "ERROR: The required  clucene library is not found.\n";
+  $configok=0;
+} else {
+  print "CLucene library found\n";
+}
+unless ((-f "/usr/include/CLucene.h") || (-f "/usr/local/include/CLucene.h")) {
+  print "ERROR: The required clucene header files are not found\n";
+  $configok=0;
+} else {
+  print "Clucene.h was found\n";
+}
+if ($lbs) {
+  print "Seting boost regex lib to $lbs\n";
+  print MAKEINFO "BOOST_REGEX_LIB=$lbs\n";
+} else {
+  die "ERROR: No boost regex lib found\n";
+}
+closedir(LIB);
+if ($needlibiconv) {
+  print MAKEINFO "LICONV_IF_NEEDED=-liconv\n";
+  print "iconv library is required\n";
+} else {
+  print "iconv is part of libc\n";
+}
+foreach $dir ("/usr/include/pgsql","/usr/local/pgsql/include","/usr/include/postgresql") {
+  if (-d $dir) {
+     print "Adding $dir to includes\n";
+     print MAKEINFO "INCPQDIR=-I$dir\n";
+  }
+}
+foreach $dir ("/usr/local/pgsql/lib") {
+  if (-d $dir) {
+     print "Adding $dir as path for qp libraries\n";
+     print MAKEINFO "LIBPQDIR=-L$dir\n";
+  }
+}
+$boostinc="";
+foreach $incdir ("/usr/include","/usr/local/include") {
+  opendir(INCDIR,$incdir);
+  @files=readdir(INCDIR);
+  closedir(INCDIR);
+  foreach $subdir (@files) {
+    if (-f "${incdir}/${subdir}/boost/regex.hpp") {
+       if ($boostinc) {
+          print "ERR: double instalation of boost ${incdir}/$subdir $boostinc\n";
+       } else {
+         $boostinc="${incdir}/$subdir";
+       }
+    }
+  }
+}
+unless ($boostinc) {
+  print "ERROR: No boost/regex.hpp header found for boost regular expressions lib\n";
+  $configok=0;
+  $boostinc=".";
+} else {
+  print "boost regex files located at $boostinc\n";
+}
+$aceinc="";
+foreach $incdir ("/usr/include","/usr/local/include",$ENV{"ACE_ROOT"}) {
+  opendir(INCDIR,$incdir);
+  @files=readdir(INCDIR);
+  closedir(INCDIR);
+  foreach $subdir (@files) {
+    if (-f "${incdir}/${subdir}/ACE.h") {
+       if ($aceinc) {
+          print "ERR: double instalation of boost ${incdir}/$subdir $boostinc\n";
+       } else {
+         $aceinc="${incdir}/$subdir";
+       }
+    }
+  }
+}
+unless ($aceinc) {
+  print "ERROR: No ace/ACE.h header found for ACE communication framework lib\n";
+  $configok=0;
+  $aceinc=".";
+} else {
+  print "ACE library located at $aceinc\n";
+}
+print MAKEINFO "BOOSTINCDIR=$boostinc\n";
+#FIXME !!!
+print MAKEINFO "ACEINCDIR=$aceinc\n";
+print MAKEINFO "GCCFLAGS += -D_REENTRANT\n";
+if (-f "/usr/lib/libclucene.la") {
+  print MAKEINFO "LIBCLUCENE = /usr/lib/libclucene.la\n";
+} elsif (-f "/usr/local/lib/libclucene.la") {
+  print MAKEINFO "LIBCLUCENE = /usr/local/lib/libclucene.la\n";
+} else {
+  print "ERR: No clucene library found (libclucene.la)\n";
+  $configok=0;
+}
+unless ((-f "/usr/include/cgicc/Cgicc.h") || (-f "/usr/local/include/cgicc/Cgicc.h")) {
+  print "ERR: Cgicc header files not found\n";
+  $configok=0;
+} else {
+  print "Cgicc header files found\n";
+}
+if ($configok) {
+  print MAKEINFO "CONF_OK = yes\n";
+} else {
+  print MAKEINFO "CONF_OK = \n";
+}
+close(MAKEINFO);
+

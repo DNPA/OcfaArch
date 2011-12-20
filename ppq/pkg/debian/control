@@ -1,0 +1,6 @@
+Package: ocfa-ppqtools
+Version: 2.3.0
+Architecture: amd64
+Depends: libxml-dom-perl,libboost-all-dev
+Maintainer: Klpd <ocfa@dnpa.nl>
+Description: Persistent priority queue tools for the open computer forensics architectur.

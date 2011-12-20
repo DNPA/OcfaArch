@@ -1,0 +1,95 @@
+<!-- A rulelist consists of tables. 
+     'facades' defines if the table requires facades for global meta data to be set for
+     the first and the last job.
+-->
+<!ELEMENT rulelist (table+)>
+<!ATTLIST rulelist
+	facades         (true|false) "true"
+>
+<!-- A table defines a set of rules, and has a name.
+     The 'mode' defines if the table:
+       'narrow' : looks at all the metadata only of non 'done' jobs.
+       'shalow' : looks at only the 'moduleinstance' metadata for all jobs.
+       'deep'	: looks at all the metadata for all jobs.
+-->
+<!ELEMENT table (rule+)>
+<!ATTLIST table
+	name		NMTOKEN #REQUIRED
+	mode		(narrow | shalow | deep ) "narrow"
+>
+<!-- A rule defines a type of metadata source it pertains to, and defines the name of the metadata it matches on 
+     (for moduleinstance this is the module name). The name can be negated to match anything with a name 
+     other than the one suplied. A rule can have a number of different types of limiting constructs that add
+     extra checks to the metadata processing, can define any number of side actions (meta adding, job argument adding,
+     and the two kinds of logging. Finaly a rule always contains a final action that is either commit,forward or a jump
+     to an other table. -->
+<!ELEMENT rule (limithost?,limitnamespace?,limitmodule?,(limitscalar|limitarray|limittable)?,(addmeta|addlog|addelog|addjobarg)*,(commit|forward|jump|suspend|return))>
+<!ATTLIST rule
+	name		NMTOKEN #IMPLIED
+	negate		(true|false) "false" 
+	datatype	(moduleinstance|scalarmeta|arraymeta|tablemeta) "scalarmeta"
+>
+<!--An aditional rule limit for the host a module was running on -->
+<!ELEMENT limithost (#PCDATA)>
+<!ATTLIST limithost
+	negate		(true|false) "false"
+	netmask		NMTOKEN #IMPLIED
+>
+<!--An aditional rule limit for the namespace a module was running on -->
+<!ELEMENT limitnamespace (#PCDATA)>
+<!ATTLIST limitnamespace
+	negate		(true|false) "false"
+	matchsub	(true|false) "false"
+>
+<!--An aditional rule limit for the module in which job the metadata was pressent -->
+<!ELEMENT limitmodule (#PCDATA)>
+<!ATTLIST limitmodule
+	negate          (true|false) "false"
+>
+<!--An aditional rule limit based on the content of scalar metadata -->
+<!ELEMENT limitscalar (#PCDATA)>
+<!ATTLIST limitscalar
+	type		(string | int | float | datetime) "string"
+	negate          (true|false) "false"
+	matchtype	(exact|regex|greater) "exact"
+>
+<!--An aditional rule limit for the location of meta in an array -->
+<!ELEMENT limitarray (limitscalar)>
+<!ATTLIST limitarray
+	rangestart	NMTOKEN #IMPLIED
+	rangeend	NMTOKEN #IMPLIED
+>
+<!--An aditional rule limit for the location of meta in a table -->
+<!ELEMENT limittable (limitscalar)>
+<!ATTLIST limittable
+	collid		NMTOKEN #REQUIRED
+	rangestart      NMTOKEN #IMPLIED
+	rangeend        NMTOKEN #IMPLIED
+>
+<!--A side action for adding meta to the routers job -->
+<!ELEMENT addmeta (#PCDATA)>
+<!ATTLIST addmeta
+	name		NMTOKEN #REQUIRED
+>
+<!--A side action for normal logging by the routers-->
+<!ELEMENT addlog (#PCDATA)>
+<!ATTLIST addlog
+	prio    (debug | info | notice | warning | err | crit | alert | emerg) "notice"
+>
+<!--A side action for evidence logging in the routers job-->
+<!ELEMENT addelog (#PCDATA)>
+<!ATTLIST addelog
+	prio    (debug | info | notice | warning | err | crit | alert | emerg) "notice"
+>
+<!--A side action for adding arguments to the outgoing job -->
+<!ELEMENT addjobarg (#PCDATA)>
+<!ATTLIST addjobarg
+	name            NMTOKEN #REQUIRED
+>
+<!--The final actions trigered by the rule -->
+<!ELEMENT commit (#PCDATA)>
+<!ELEMENT suspend (#PCDATA)>
+<!ELEMENT forward (#PCDATA)>
+<!ELEMENT jump (#PCDATA)>
+<!ELEMENT return EMPTY >
+

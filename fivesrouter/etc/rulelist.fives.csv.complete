@@ -1,0 +1,183 @@
+#New rulelist format must begin like this
+VERSION: 2
+
+# tab == 3 spaces
+
+#Assumptions:
+# SMATCH on DNTCR evaluates to true
+# an evidence can have a maximum of ONE mimetype meta data (like text/GnuPG) (otherwise, a reorder of mimetype/fileinfo rules is required)
+
+#important questions:
+#where does haspassword come from?
+# fileextension?
+# can previous_module be used immediately
+
+default:
+# Some processing based on fsentity-type, not used much but for the encase export kickstart.
+fsentity-type			SMATCH	swap;					ACT_JUMP;		label_swap;
+fsentity-type			SMATCH	unallocatednode;	ACT_JUMP;		label_unallocatednode;
+fsentity-type			SMATCH	diskimage;			ACT_JUMP;		label_image;
+
+inodetype				SMATCH	file;					ACT_JUMP;		label_newfiles;
+# If the evidence is new but not a file (dir symlink etc, than we have nothing we can do with it.
+inodetype				SMATCH	DNTCR;				ACT_COMMIT;		dsm;
+
+
+
+label_newfiles:
+# check if the new file is empty and abort processing if it is.
+# empty file
+datasha1					SMATCH	da39a3ee5e6b4b0d3255bfef95601890afd80709; ACT_COMMIT; dsm;
+# file with just a newline.
+datasha1					SMATCH	adc83b19e793491b1c6ea0fd8b46cd9f32e592fc; ACT_COMMIT; dsm;
+# file with just a CR/NL.
+datasha1					SMATCH	ba8ab5a0280b953aa97435ff8946cbcbb2755a27; ACT_COMMIT; dsm;
+
+# New non empty files from text processing modules should go to the indexer.		<-- Do derived evidence have a previous module? old rulelist assumes that.
+previous_module		SMATCH	strings;				ACT_FORWARD;	indexer;
+previous_module		SMATCH	antiword;			ACT_FORWARD;	indexer;	
+previous_module		SMATCH	pdftotext;			ACT_FORWARD;	indexer;
+
+# Files created by the sleuthkit that were part of a filesystem should be processed normally.
+previous_module		SMATCH	sleuthkit
+	AND evidencepath	SMATCH	/ROOTDIR;			ACT_FORWARD;	digest;
+
+# Non FS sleuthkit files should go to the carver.
+previous_module		SMATCH	sleuthkit;			ACT_FORWARD;	photorec;
+
+# The outlook and outlook express modules produce useless logs, don't process these.
+previous_module		SMATCH	outlook
+	AND evidencelocation SMATCH .log;				ACT_COMMIT;		dsm;
+
+# Send other files from the outlook/dbxsplit modules and files from mailsplit to mailwash.
+previous_module		SMATCH	outlook;				ACT_FORWARD;	mailwash;
+previous_module		SMATCH	mailsplit;			ACT_FORWARD;	mailwash;
+previous_module		SMATCH	dbxsplit;			ACT_FORWARD;	mailwash;
+
+#Unallocated data from the sleuthkit module:
+evidencelocation		SMATCH	data.slack;			ACT_FORWARD;	strings;
+evidencelocation		SMATCH	data.unaloc;		ACT_FORWARD;	photorec;
+
+#All other new files get processed normally.
+#check if digest knows this file
+inodetype				SMATCH 	file;					ACT_FORWARD;	digest;
+digestsource			SMATCH	NIST;					ACT_COMMIT;		dsm;
+digestsource			SMATCH	KP;					ACT_COMMIT;		dsm;
+digestsource			SMATCH	MALL;					ACT_COMMIT;		dsm;
+#Uncomment the following line if you want all unique data to only get processed once
+# for any given investigation. Results in a faster run, but more dificult searches. Untested!
+#digestsource 			SMATCH	SELF;					ACT_COMMIT;		dsm;
+
+
+#digestsource			SMATCH	DNTCR;				ACT_FORWARD;	file;
+
+#If a zip file has a password, we don't have a module for that, send it to the dummy manualreview module.
+haspassword				SMATCH	DNTCR;				ACT_JUMP; 		label_haspassword;
+
+# Processing of images that are entered directly
+evidencelocation		SMATCH	.crv;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.img;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.IMG;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.dd;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.DD;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.e01;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.E01;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.aff;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.AFF;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.ISO;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.iso;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.RAW;					ACT_FORWARD;	sleuthkit;
+evidencelocation		SMATCH	.raw;					ACT_FORWARD;	sleuthkit;
+previous_module		SMATCH	sleuthkit;			ACT_COMMIT;		dsm;			#we shouldnt do more with this image, right?
+
+
+#TODO: find out what type of file it is and go to appropriate label (image, video etc )
+inodetype				SMATCH 	file;					ACT_FORWARD;	file;
+
+
+# Process new evidence where the deriving module KNOWS the
+# mimetype of the data AND the digest is important to check.	XXX: I dont know whether digest data is important or not
+mimetype					SMATCH	application/bzip;				ACT_FORWARD;	bzip;
+mimetype					SMATCH	application/bzip2;			ACT_FORWARD;	bzip;	#unnecessary due to substring match?
+mimetype					SMATCH	application/compress;		ACT_FORWARD;	gzip;
+mimetype					SMATCH	application/dosexec;			ACT_FORWARD;	objdump;
+mimetype					SMATCH	application/gzip;				ACT_FORWARD;	gzip;
+mimetype					SMATCH	application/msword;			ACT_FORWARD;	antiword;
+mimetype					SMATCH	application/pgp;				ACT_FORWARD;	pkr;
+mimetype					SMATCH	application/pgp-signature;	ACT_FORWARD;	pgp;	
+mimetype					SMATCH	application/pdf;				ACT_FORWARD;	pdftotext;
+mimetype					SMATCH	application/tar;				ACT_FORWARD;	tar;
+mimetype					SMATCH	application/x-compress;		ACT_FORWARD;	7z;
+mimetype					SMATCH	application/x-zip;			ACT_FORWARD;	zip;
+mimetype					SMATCH	application/x-bzip;			ACT_FORWARD;	bzip;
+mimetype					SMATCH	application/x-gtar;			ACT_FORWARD;	tar;
+mimetype					SMATCH	application/x-tar;			ACT_FORWARD;	tar;
+mimetype					SMATCH	application/x-bzip2;			ACT_FORWARD;	bzip;
+mimetype					SMATCH	application/x-dosexec;		ACT_FORWARD;	objdump;
+mimetype					SMATCH	application/x-gzip;			ACT_FORWARD;	gzip;
+mimetype					SMATCH	application/x-ocfa-outlook;ACT_FORWARD;	outlook;
+mimetype					SMATCH	application/zip;				ACT_FORWARD;	zip;
+mimetype					SMATCH	image/jpeg;						ACT_FORWARD;	exif;
+mimetype					SMATCH	message/rfc822;				ACT_FORWARD;	mailsplit;
+mimetype					SMATCH	text;								ACT_FORWARD;	indexer;
+mimetype					SMATCH	text/GnuPG;						ACT_FORWARD;	pkr;		#pkr and pgp ?
+mimetype					SMATCH	text/GnuPG;						ACT_FORWARD;	pgp;
+mimetype					SMATCH	text/mail;						ACT_FORWARD;	mailsplit;
+mimetype					SMATCH	text/news;						ACT_FORWARD;	mailsplit;
+mimetype					SMATCH	text/PGP;						ACT_FORWARD;	pkr;		#pkr and pgp ?
+mimetype					SMATCH	text/PGP;						ACT_FORWARD;	pgp;
+mimetype					SMATCH	text/x-ocfa-mail;				ACT_FORWARD;	mailwash;
+mimetype					SMATCH	text/x-mail;					ACT_FORWARD;	mailsplit;
+mimetype					SMATCH	text/x-news;					ACT_FORWARD;	mailsplit;
+#at this point, we have sent the evidence through the digest module already, hence, e.g, the 
+# nwcontenttypekp;DNTCR;mimetype;text/x-ocfa-mail;DNTCR;ACT_FORWARD;digest;mailwash
+# has already been at the digest and should now go directly to mailwash (-> no need for arguments!)
+fileinfo					SMATCH	Microsoft Office Document;	ACT_FORWARD;	antiword;
+fileinfo					SMATCH	filesystem;						ACT_FORWARD;	sleuthkit;
+fileinfo					SMATCH	partition;						ACT_FORWARD;	sleuthkit;
+
+
+
+#XXX: there are probably more modules that generate data to index
+previous_module		SMATCH	antiword;			ACT_FORWARD;	indexer;
+previous_module		SMATCH	pdftotext;			ACT_FORWARD;	indexer;
+previous_module		SMATCH	strings;				ACT_FORWARD;	indexer;
+
+#XXX: I have no idea whether these should be here or somewhere else
+previous_module		SMATCH	outlookexpress;	ACT_FORWARD;	mailwash;
+previous_module		SMATCH	outlook;				ACT_FORWARD;	mailwash;
+previous_module		SMATCH	mailsplit;			ACT_FORWARD;	mailwash;
+
+
+fileextension			SMATCH	eml;					ACT_FORWARD;	mailwash;
+fileextension			SMATCH	pst;					ACT_FORWARD;	outlook;
+fileextension			SMATCH	dbx;					ACT_FORWARD;	outlookexpress;
+fileextension			SMATCH	pgp;					ACT_FORWARD;	pkr;
+fileextension			SMATCH	pkr;					ACT_FORWARD;	pkr;
+fileextension			SMATCH	gpg;					ACT_FORWARD;	pkr;
+fileextension			SMATCH	ask;					ACT_FORWARD;	pgp;
+
+
+#finally, we commit to dsm
+DNTCR						SMATCH	DNTCR;				ACT_COMMIT;		dsm;			#XXX: some way of matching all evidence
+
+
+# handle swap, image unallocatednode. could be put directly in newfiles using previous_module 
+label_swap:
+fsentity-type			SMATCH	swap;					ACT_FORWARD;	strings;
+DNTCR						SMATCH	DNTCR;				ACT_COMMIT;		dsm;
+
+label_unallocatednode:
+fsentity-type			SMATCH	unallocatednode;	ACT_FORWARD;	photorec;
+DNTCR						SMATCH	DNTCR;				ACT_COMMIT;		dsm;
+
+label_image:
+fsentity-type			SMATCH	image;				ACT_FORWARD;	sleuthkit;
+DNTCR						SMATCH	DNTCR;				ACT_COMMIT;		dsm;
+
+#if it has a password, we cant do much more..
+label_haspassword:
+haspassword				SMATCH	DNTCR;				ACT_FORWARD;	manualreview;
+DNTCR						SMATCH	DNTCR;				ACT_COMMIT;		dsm;
+
+

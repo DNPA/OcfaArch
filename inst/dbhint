@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+#  The Open Computer Forensics Architecture.
+#  Copyright (C) 2003..2006 KLPD  <ocfa@dnpa.nl>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+print "\n\n\n";
+$MAXCONNECTIONS=60;
+open(MEM,"/proc/meminfo")|| die "Unable to open /proc/meminfo\n";
+while(<MEM>) {
+  if (/MemTotal:\s*(\d+)\s*kB/i) {
+      $TMEM=$1;
+      $SHMEM=int($1*1024 / 3);
+      $SHMEM_SA= 2 * $SHMEM;
+  }
+}
+unless ($SHMEM) {
+  die "unable to determine the amounth of physical memory\n";
+}
+$sharedbuffer_memory=$SHMEM - 1950000; 
+$sharedbuffer_memory_SA = $SHMEM_SA - 1950000;
+$SHAREDBUFFERS = int($sharedbuffer_memory / 8448);
+$SHAREDBUFFERS_SA = int($sharedbuffer_memory_SA / 8448);
+print "You have got a physical memory of $TMEM and plan to use $MAXCONNECTIONS connections\n";
+print "For an Ocfa system with its own database you may with to use the folowing:\n";
+print "\tset kernel.shmmax to $SHMEM\n";
+print "\tset the postgress shared buffers to $SHAREDBUFFERS\n";
+print "For a stand alone Ocfa database you may with to use the folowing:\n";
+print "\tset kernel.shmmax to $SHMEM_SA\n";
+print "\tset the postgress shared buffers to $SHAREDBUFFERS_SA\n\n\n";
+print "You can set kernel.shmmax persistently in /etc/sysctl.conf, and can set the\n";
+print "current value using sysctl -w .\n";
+print "For postgress edit the value for shared_buffers in ~postgres/data/postgresql.conf\n\n";

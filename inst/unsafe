@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+
+#  The Open Computer Forensics Architecture.
+#  Copyright (C) 2003..2006 KLPD  <ocfa@dnpa.nl>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+if ($ARGV[0] eq "testing") {
+  $unsafe=1;
+} elsif ($ARGV[0] eq "production") {
+  $unsafe=0;
+} else {
+ print "\n\n\nFor a testing and debugging enviroment you may want to edit some scripts by hand at times.\n";
+ print "It may be convenient to be able to do this as the default ocfa user.\n";
+ print "For production enviroments this is to be considdered unsafe and if editing of these files \nis needed it should be done as root.\n\n";
+print "Next to a more leniant security setting, a test instalation has extra checks for data wellformedness.\n\n";
+ while (!defined($unsafe)) {
+  print "\nProduction (p) or Test (t) installation:";
+  $res=lc(<>);
+  chomp($res);
+  if ($res eq "p") {$unsafe=0;}
+  if ($res eq "t") {$unsafe=1;}
+ }
+}
+$BASEDIR="/usr/local/digiwash";
+if (-d $ARGV[0]) {
+   $BASEDIR=$ARGV[0];
+}
+@entities=("/html","/etc","/.bashrc","/.profile");
+unlink("${BASEDIR}/etc/template.conf");
+if ($unsafe) {
+  push(@entities,"/bin","/schema"); 
+  symlink("${BASEDIR}/etc/template.conf-test","${BASEDIR}/etc/template.conf");  
+} else {
+  symlink("${BASEDIR}/etc/template.conf-production","${BASEDIR}/etc/template.conf");
+}
+foreach $entity (@entities) {
+    $dir=$BASEDIR . $entity;
+    print "Updating rights for $dir\n";
+    chown((getpwnam("ocfa"))[2,3],$dir);
+    chmod(0750,$dir);
+}

@@ -1,0 +1,359 @@
+##################################################################
+default;DNTCR;nodetype;DNTCR;DNTCR;ACT_JUMP;nodetype;
+default;DNTCR;jobcount;20;DNTCR;ACT_COMMIT;dsm;
+default;DNTCR;digestsource;DNTCR;DNTCR;ACT_JUMP;digestsource;
+default;DNTCR;mimetype;DNTCR;DNTCR;ACT_JUMP;contenttype;
+default;DNTCR;fileextension;DNTCR;DNTCR;ACT_JUMP;fileext;
+default;DNTCR;mimetype;DNTCR;DNTCR;ACT_JUMP;crapcontenttype;
+default;DNTCR;fsentity-type;unallocatednode;DNTCR;ACT_FORWARD;photorec;
+default;DNTCR;DNTCR;DNTCR;DNTCR;ACT_JUMP;lastmodule;
+#
+nodetype;DNTCR;nodetype;alternatestream;DNTCR;ACT_JUMP;attrtype;
+nodetype;DNTCR;nodetype;emptyfile;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;unallocateddiskspace;tskfs;ACT_FORWARD;strings;
+nodetype;DNTCR;nodetype;unallocateddiskspace;DNTCR;ACT_FORWARD;photorec;
+nodetype;DNTCR;nodetype;file;DNTCR;ACT_JUMP;newfiles;
+nodetype;DNTCR;nodetype;diskpartition;ACT_JUMP;partitions;
+nodetype;DNTCR;nodetype;vtmeta;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;fifo;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;characterdevice;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;dir;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;blockdevice;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;softlink;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;socket;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;whiteout;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;shad;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;libtsk3_virtual;DNTCR;ACT_COMMIT;dsm;
+nodetype;DNTCR;nodetype;DNTCR;DNTCR;ACT_FORWARD;errorunexpectednodetype;
+#
+attrtype;DNTCR;ntfs-attribute-type;default;DNTCR;ACT_FORWARD;newfiles;
+attrtype;DNTCR;ntfs-attribute-type;data;DNTCR;ACT_FORWARD;newfiles;
+attrtype;DNTCR;ntfs-attribute-type;default;DNTCR;ACT_FORWARD;newfiles;
+attrtype;DNTCR;ntfs-attribute-type;DNTCR;DNTCR;ACT_FORWARD;strings;
+attrtype;DNTCR;nodetype;DNTCR;DNTCR;ACT_FORWARD;errornoattributetypedefined;
+##################################################################
+# How do we handle the different partitions from mmls            #
+##################################################################
+#Partition types that tend to be useless
+partitions;DNTCR;partitioninfo;(0x05);DNTCR;ACT_COMMIT;dsm;
+partitions;DNTCR;partitioninfo;(0x0F);DNTCR;ACT_COMMIT;dsm;
+partitions;DNTCR;partitioninfo;(0x85);DNTCR;ACT_COMMIT;dsm;
+partitions;DNTCR;partitioninfo;(0xF2);DNTCR;ACT_COMMIT;dsm;
+#Partition types that don't contain filesystems
+partitions;DNTCR;partitioninfo;(0x00);DNTCR;ACT_FORWARD;strings;
+partitions;DNTCR;partitioninfo;(0x0A);DNTCR;ACT_FORWARD;strings;
+partitions;DNTCR;partitioninfo;(0x82);DNTCR;ACT_FORWARD;strings;
+partitions;DNTCR;partitioninfo;(0xB8);DNTCR;ACT_FORWARD;strings;
+partitions;DNTCR;partitioninfo;(0xDA);DNTCR;ACT_FORWARD;strings;
+#Partition types that are likely to contain filesystems the sleuthkit can handle.
+partitions;DNTCR;partitioninfo;(0x01);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x04);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x06);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x07);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x0B);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x0C);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x0E);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x14);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x16);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x17);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x1B);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x1C);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x1E);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x83);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x84);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0x9F);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0xA5);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0xA6);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0xA8);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0xA9);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0xBF);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0xC1);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0xC4);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0xC6);DNTCR;ACT_FORWARD;fsstat;
+partitions;DNTCR;partitioninfo;(0xBE);DNTCR;ACT_FORWARD;fixmeloopmount;
+partitions;DNTCR;partitioninfo;(0xBF);DNTCR;ACT_FORWARD;fixmeloopmount;
+partitions;DNTCR;partitioninfo;(0xEB);DNTCR;ACT_FORWARD;fixmeloopmount;
+#Other partition types are not supported by the sleuthkit fs module.
+partitions;DNTCR;partitioninfo;DNTCR;DNTCR;ACT_FORWARD;fixmephotorec;
+##################################################################
+# All new data comming either directly from the kickstart or     #
+# having just been derived from other evidence by some module    #
+################################################################## 
+newdata;DNTCR;nodetype;diskimage;DNTCR;ACT_FORWARD;mmls;
+newdata;DNTCR;nodetype;disk-image/empty-ptable;DNTCR;ACT_FORWARD;fixmegpart;
+newdata;DNTCR;nodetype;unallocateddiskspace;DNTCR;ACT_FORWARD;photorec;
+newdata;DNTCR;nodetype;disk-image/no-ptable;DNTCR;ACT_FORWARD;fsstat;
+newdata;DNTCR;nodetype;vtmeta;DNTCR;ACT_FORWARD;dsm;
+newdata;DNTCR;nodetype;diskpartition;DNTCR;ACT_JUMP;partitions;
+##################################################################
+# All new files comming either directly from the kickstart or    #
+# having just been derived from other evidence by some module    #
+################################################################## 
+# First check if the new file is empty and abort processing if it is.
+newfiles;DNTCR;datasha1;DNTCR;DNTCR;ACT_JUMP;emptyfiles;
+# Check if our parent count is not way to high as a result of a buggy rulelist.
+newfiles;DNTCR;parentcount;90;DNTCR;ACT_COMMIT;dsm;
+# If the new file comes from the kickstart, look if it is likely to be an image.
+newfiles;DNTCR;DNTCR;DNTCR;kickstart;ACT_JUMP;images;
+# New non empty files from text processing modules should go to the indexer.
+newfiles;DNTCR;DNTCR;DNTCR;strings;ACT_FORWARD;indexer;
+newfiles;DNTCR;DNTCR;DNTCR;antiword;ACT_FORWARD;indexer;
+newfiles;DNTCR;DNTCR;DNTCR;pdftotext;ACT_FORWARD;indexer;
+# Files created by the sleuthkit that were part of a filesystem should be processed normally.
+newfiles;DNTCR;evidencepath;/ROOTDIR;sleuthkit;ACT_FORWARD;digest;
+# Non FS sleuthkit files should go to the carver.
+newfiles;DNTCR;DNTCR;DNTCR;sleuthkit;ACT_FORWARD;photorec;
+# The outlook and outlook express modules produce useless logs, don't process these.
+newfiles;DNTCR;evidencelocation;.log;outlook;ACT_COMMIT;dsm;
+# Send other files from the outlook/dbxsplit modules and files from mailsplit to mailwash.
+newfiles;DNTCR;DNTCR;DNTCR;outlook;ACT_FORWARD;mailwash;
+newfiles;DNTCR;DNTCR;DNTCR;mailsplit;ACT_FORWARD;mailwash;
+newfiles;DNTCR;DNTCR;DNTCR;dbxsplit;ACT_FORWARD;mailwash;
+# Some processing based on fsentity-type, not used much but for the encase export kickstart.
+newfiles;DNTCR;fsentity-type;image;DNTCR;ACT_FORWARD;mmls;
+newfiles;DNTCR;fsentity-type;swap;DNTCR;ACT_FORWARD;strings;
+#Set the jump to either nwcontenttypedfl or nwcontenttypekp depending on the case type.
+#  use nwcontenttypekp for investigations prioritizing digest usage.
+newfiles;DNTCR;mimetype;DNTCR;mailwash;ACT_JUMP;nwcontenttypedfl;
+#If a zip file has a password, we don't have a module for that, send it to the dummy manualreview module.
+newfiles;DNTCR;haspassword;DNTCR;DNTCR;ACT_FORWARD;manualreview;
+#Unallocated data from the sleuthkit module:
+newfiles;DNTCR;evidencelocation;data.slack;DNTCR;ACT_FORWARD;strings;
+newfiles;DNTCR;evidencelocation;data.unaloc;DNTCR;ACT_FORWARD;photorec;
+newfiles;DNTCR;evidencelocation;Thumbs.db;DNTCR;ACT_FORWARD;vinettocfa;
+newfiles;DNTCR;evidencelocation;index.dat;DNTCR;ACT_FORWARD;pasco;
+#All other new files get processed normaly.
+newfiles;DNTCR;inodetype;file;DNTCR;ACT_FORWARD;digest;
+#
+###################################################################
+# empty files and files containing only one or a few useless      #
+# characters like \n or \r\n                                      #
+###################################################################
+# empty file
+emptyfiles;DNTCR;datasha1;da39a3ee5e6b4b0d3255bfef95601890afd80709;DNTCR;ACT_COMMIT;dsm;
+# file with just a newline.
+emptyfiles;DNTCR;datasha1;adc83b19e793491b1c6ea0fd8b46cd9f32e592fc;DNTCR;ACT_COMMIT;dsm;
+# file with just a CR/NL.
+emptyfiles;DNTCR;datasha1;ba8ab5a0280b953aa97435ff8946cbcbb2755a27;DNTCR;ACT_COMMIT;dsm;
+###################################################################
+# Use the digest source to determine what to process and what not #
+###################################################################
+digestsource;DNTCR;digestsource;NIST;DNTCR;ACT_COMMIT;dsm;
+digestsource;DNTCR;digestsource;KP;DNTCR;ACT_COMMIT;dsm;
+digestsource;DNTCR;digestsource;MALL;DNTCR;ACT_COMMIT;dsm;
+#Uncomment the folowing line if you want all unique data to only get processed ones
+# for any given investigation. Results in a faster run, but more dificult searches.
+#digestsource;DNTCR;digestsource;SELF;DNTCR;ACT_COMMIT;dsm;
+digestsource;DNTCR;digestsource;DNTCR;DNTCR;ACT_FORWARD;file;
+#
+###################################################################
+# If there is no metadata to route on, us the last module that    #
+# processed the (not newly derived) evidence.                     #
+# Explicitly send to the dsm if we know we should.                #
+###################################################################
+lastmodule;DNTCR;DNTCR;DNTCR;vinettocfa;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;pasco;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;photorec;ACT_COMMIT;strings;
+lastmodule;DNTCR;DNTCR;DNTCR;pkr;ACT_FORWARD;pgp;
+lastmodule;DNTCR;DNTCR;DNTCR;indexer;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;strings;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;mailsplit;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;dbxsplit;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;mailwash;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;exif;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;7z;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;antiword;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;bzip;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;gzip;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;oleexpress;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;outlook;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;pdftotext;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;photorec;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;tar;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;zip;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;objdump;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;pgp;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;e01;ACT_FORWARD;mmls;
+lastmodule;DNTCR;DNTCR;DNTCR;fsstat;ACT_JUMP;filesystems;
+lastmodule;DNTCR;DNTCR;DNTCR;mmls;ACT_COMMIT;dsm;
+lastmodule;DNTCR;DNTCR;DNTCR;tskfs;ACT_COMMIT;fixmeblkls;
+lastmodule;DNTCR;DNTCR;DNTCR;blkls;ACT_COMMIT;dsm;
+###################################################################
+# Processing based on filessytems determined by fsstat            #
+###################################################################
+filesystems;DNTCR;filesystemtype;FAT;DNTCR;ACT_FORWARD;fixmetskfs;
+filesystems;DNTCR;filesystemtype;ISO9660;DNTCR;ACT_FORWARD;fixmetskfs;
+filesystems;DNTCR;filesystemtype;NTFS;DNTCR;ACT_FORWARD;fixmetskfs;
+filesystems;DNTCR;filesystemtype;HFSX;DNTCR;ACT_FORWARD;fixmetskfs;
+filesystems;DNTCR;filesystemtype;HFS+;DNTCR;ACT_FORWARD;fixmetskfs;
+filesystems;DNTCR;filesystemtype;Ext2;DNTCR;ACT_FORWARD;fixmetskfs;
+filesystems;DNTCR;filesystemtype;Ext3;DNTCR;ACT_FORWARD;fixmetskfs;
+filesystems;DNTCR;filesystemtype;UFS 1;DNTCR;ACT_FORWARD;fixmetskfs;
+filesystems;DNTCR;filesystemtype;UFS 2;DNTCR;ACT_FORWARD;fixmetskfs;
+filesystems;DNTCR;filesystemtype;Unknown;DNTCR;ACT_FORWARD;fixmeloopmount;
+filesystems;DNTCR;DNTCR;DNTCR;DNTCR;ACT_FORWARD;fixmeloopmount;
+# Note, this is not complete, if the sleuthkit sinds neither a partition
+# table nor a filesystem, the result should go to the carver. The sleuthkit
+# module does not currently add proper metadata to accomodate this.
+lastmodule;DNTCR;DNTCR;DNTCR;sleuthkit;ACT_COMMIT;dsm;
+###################################################################
+# Processing of images that are entered directly                  #
+###################################################################
+images;DNTCR;evidencelocation;.crv;DNTCR;ACT_FORWARD;mmls;
+images;DNTCR;evidencelocation;.img;DNTCR;ACT_FORWARD;mmls;
+images;DNTCR;evidencelocation;.IMG;DNTCR;ACT_FORWARD;mmls;
+images;DNTCR;evidencelocation;.dd;DNTCR;ACT_FORWARD;mmls;
+images;DNTCR;evidencelocation;.DD;DNTCR;ACT_FORWARD;mmls;
+images;DNTCR;evidencelocation;.e01;DNTCR;ACT_FORWARD;mmls;
+images;DNTCR;evidencelocation;.E01;DNTCR;ACT_FORWARD;mmls;
+images;DNTCR;evidencelocation;.aff;DNTCR;ACT_FORWARD;mmls;
+images;DNTCR;evidencelocation;.AFF;DNTCR;ACT_FORWARD;mmls;
+images;DNTCR;evidencelocation;.ISO;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.iso;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.RAW;DNTCR;ACT_FORWARD;mmls;
+images;DNTCR;evidencelocation;.raw;DNTCR;ACT_FORWARD;mmls;
+###################################################################
+# Process new evidence where the deriving module KNOWS the        #
+# mimetype of the data AND the digest is important to check.      #
+# Note: currentky only the digest module forwarding works.        #
+###################################################################
+nwcontenttypekp;DNTCR;mimetype;text/x-ocfa-mail;DNTCR;ACT_FORWARD;digest;mailwash
+nwcontenttypekp;DNTCR;mimetype;image/jpeg;DNTCR;ACT_FORWARD;digest;exif
+nwcontenttypekp;DNTCR;mimetype;application/msword;DNTCR;ACT_FORWARD;digest;antiword
+nwcontenttypekp;DNTCR;mimetype;application/pgp-signature;DNTCR;ACT_FORWARD;digest;pgp
+nwcontenttypekp;DNTCR;mimetype;application/pgp;DNTCR;ACT_FORWARD;digest;pkr
+nwcontenttypekp;DNTCR;mimetype;message/rfc822;DNTCR;ACT_FORWARD;digest;mailsplit
+nwcontenttypekp;DNTCR;mimetype;text/PGP;DNTCR;ACT_FORWARD;digest;pgp
+nwcontenttypekp;DNTCR;mimetype;text/GnuPG;DNTCR;ACT_FORWARD;digest;pgp
+nwcontenttypekp;DNTCR;mimetype;application/x-ocfa-outlook-express;DNTCR;ACT_FORWARD;digest;dbxsplit
+nwcontenttypekp;DNTCR;mimetype;application/x-ocfa-outlook;DNTCR;ACT_FORWARD;digest;outlook
+nwcontenttypekp;DNTCR;mimetype;application/x-compress;DNTCR;ACT_FORWARD;digest;7z
+nwcontenttypekp;DNTCR;mimetype;application/x-zip;DNTCR;ACT_FORWARD;digest;zip
+nwcontenttypekp;DNTCR;mimetype;application/zip;DNTCR;ACT_FORWARD;digest;zip
+nwcontenttypekp;DNTCR;mimetype;application/compress;DNTCR;ACT_FORWARD;digest;gzip
+nwcontenttypekp;DNTCR;mimetype;application/x-gzip;DNTCR;ACT_FORWARD;digest;gzip
+nwcontenttypekp;DNTCR;mimetype;application/gzip;DNTCR;ACT_FORWARD;digest;gzip
+nwcontenttypekp;DNTCR;mimetype;application/x-tar;DNTCR;ACT_FORWARD;digest;tar
+nwcontenttypekp;DNTCR;mimetype;application/tar;DNTCR;ACT_FORWARD;digest;tar
+nwcontenttypekp;DNTCR;mimetype;application/x-gtar;DNTCR;ACT_FORWARD;digest;tar
+nwcontenttypekp;DNTCR;mimetype;application/x-bzip;DNTCR;ACT_FORWARD;digest;bzip
+nwcontenttypekp;DNTCR;mimetype;application/bzip;DNTCR;ACT_FORWARD;digest;bzip
+nwcontenttypekp;DNTCR;mimetype;application/x-bzip2;DNTCR;ACT_FORWARD;digest;bzip
+nwcontenttypekp;DNTCR;mimetype;application/bzip2;DNTCR;ACT_FORWARD;digest;bzip
+nwcontenttypekp;DNTCR;mimetype;application/pdf;DNTCR;ACT_FORWARD;digest;pdftotext
+nwcontenttypekp;DNTCR;mimetype;application/pgp-signature;DNTCR;ACT_FORWARD;digest;pgp
+nwcontenttypekp;DNTCR;mimetype;application/pgp;DNTCR;ACT_FORWARD;digest;pkr
+nwcontenttypekp;DNTCR;mimetype;text/x-mail;DNTCR;ACT_FORWARD;digest;mailsplit
+nwcontenttypekp;DNTCR;mimetype;text/mail;DNTCR;ACT_FORWARD;digest;mailsplit
+nwcontenttypekp;DNTCR;mimetype;message/rfc822;DNTCR;ACT_FORWARD;digest;mailsplit
+nwcontenttypekp;DNTCR;mimetype;text/x-news;DNTCR;ACT_FORWARD;digest;mailsplit
+nwcontenttypekp;DNTCR;mimetype;text/news;DNTCR;ACT_FORWARD;digest;mailsplit
+nwcontenttypekp;DNTCR;mimetype;text/PGP;DNTCR;ACT_FORWARD;digest;pkr
+nwcontenttypekp;DNTCR;mimetype;text/GnuPG;DNTCR;ACT_FORWARD;digest;pkr
+nwcontenttypekp;DNTCR;mimetype;text;DNTCR;ACT_FORWARD;digest;indexer
+nwcontenttypekp;DNTCR;mimetype;application/x-dosexec;DNTCR;ACT_FORWARD;digest;objdump
+nwcontenttypekp;DNTCR;mimetype;application/dosexec;DNTCR;ACT_FORWARD;digest;objdump
+nwcontenttypekp;DNTCR;fileinfo;Microsoft Office Document;DNTCR;ACT_FORWARD;digest;antiword
+nwcontenttypekp;DNTCR;fileinfo;filesystem;DNTCR;ACT_FORWARD;digest;fsstat
+nwcontenttypekp;DNTCR;fileinfo;partition;DNTCR;ACT_FORWARD;digest;fsstat
+nwcontenttypekp;DNTCR;fileinfo;x-ocfa-xmlutf16LE;DNTCR;ACT_FORWARD;digest;utf16le2utf8;
+#
+###################################################################
+# Process new evidence where the deriving module KNOWS the        #
+# mimetype of the data AND the digest is not important to check.  #
+# Note: will be outdated ones router tags work for nwcontenttypekp#
+###################################################################
+nwcontenttypedfl;DNTCR;mimetype;text/x-ocfa-mailheaders;DNTCR;ACT_COMMIT;dsm;
+nwcontenttypedfl;DNTCR;mimetype;text/x-ocfa-mail;DNTCR;ACT_FORWARD;mailwash;
+nwcontenttypedfl;DNTCR;mimetype;DNTCR;DNTCR;ACT_JUMP;contenttype;
+###################################################################
+# Process new or existing evidence based on mime type.            #
+###################################################################
+contenttype;DNTCR;mimetype;application/x-rar;DNTCR;ACT_FORWARD;ocfarar;
+contenttype;DNTCR;mimetype;image/jpeg;DNTCR;ACT_FORWARD;exif;
+contenttype;DNTCR;mimetype;application/msword;DNTCR;ACT_FORWARD;antiword;
+contenttype;DNTCR;mimetype;application/pgp-signature;DNTCR;ACT_FORWARD;pgp;
+contenttype;DNTCR;mimetype;application/x-gnupg-keyring;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;application/pgp;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;message/rfc822;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;text/PGP;DNTCR;ACT_FORWARD;pgp;
+contenttype;DNTCR;mimetype;text/GnuPG;DNTCR;ACT_FORWARD;pgp;
+contenttype;DNTCR;mimetype;application/x-ocfa-outlook-express;DNTCR;ACT_FORWARD;dbxsplit;
+contenttype;DNTCR;mimetype;application/x-ocfa-outlook;DNTCR;ACT_FORWARD;outlook;
+contenttype;DNTCR;mimetype;application/x-compress;DNTCR;ACT_FORWARD;7z;
+contenttype;DNTCR;mimetype;application/x-zip;DNTCR;ACT_FORWARD;zip;
+contenttype;DNTCR;mimetype;application/zip;DNTCR;ACT_FORWARD;zip;
+contenttype;DNTCR;mimetype;application/compress;DNTCR;ACT_FORWARD;gzip;
+contenttype;DNTCR;mimetype;application/x-gzip;DNTCR;ACT_FORWARD;gzip;
+contenttype;DNTCR;mimetype;application/gzip;DNTCR;ACT_FORWARD;gzip;
+contenttype;DNTCR;mimetype;application/x-tar;DNTCR;ACT_FORWARD;tar;
+contenttype;DNTCR;mimetype;application/tar;DNTCR;ACT_FORWARD;tar;
+contenttype;DNTCR;mimetype;application/x-gtar;DNTCR;ACT_FORWARD;tar;
+contenttype;DNTCR;mimetype;application/x-bzip;DNTCR;ACT_FORWARD;bzip;
+contenttype;DNTCR;mimetype;application/bzip;DNTCR;ACT_FORWARD;bzip;
+contenttype;DNTCR;mimetype;application/x-bzip2;DNTCR;ACT_FORWARD;bzip;
+contenttype;DNTCR;mimetype;application/bzip2;DNTCR;ACT_FORWARD;bzip;
+contenttype;DNTCR;mimetype;application/pdf;DNTCR;ACT_FORWARD;pdftotext;
+contenttype;DNTCR;mimetype;application/pgp-signature;DNTCR;ACT_FORWARD;pgp;
+contenttype;DNTCR;mimetype;application/x-gnupg-keyring;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;application/pgp;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;text/x-mail;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;text/mail;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;message/rfc822;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;text/x-news;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;text/news;DNTCR;ACT_FORWARD;mailsplit;
+contenttype;DNTCR;mimetype;text/PGP;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;text/GnuPG;DNTCR;ACT_FORWARD;pkr;
+contenttype;DNTCR;mimetype;text;DNTCR;ACT_FORWARD;indexer;
+contenttype;DNTCR;mimetype;application/x-dosexec;DNTCR;ACT_FORWARD;objdump;
+contenttype;DNTCR;mimetype;application/dosexec;DNTCR;ACT_FORWARD;objdump;
+contenttype;DNTCR;fileinfo;Microsoft Office Document;DNTCR;ACT_FORWARD;antiword;
+contenttype;DNTCR;fileinfo;filesystem;DNTCR;ACT_FORWARD;fsstat;
+contenttype;DNTCR;fileinfo;partition;DNTCR;ACT_FORWARD;fsstat;
+contenttype;DNTCR;fileinfo;x-ocfa-xmlutf16LE;DNTCR;ACT_FORWARD;utf16le2utf8;
+#
+#########################################################################
+# Route based on router tag set by previous router job.                 #
+# Future version of router will be able to use this.                    #
+#########################################################################
+bytag;DNTCR;routertag;mailwash;DNTCR;ACT_FORWARD;mailwash;
+bytag;DNTCR;routertag;indexer;DNTCR;ACT_FORWARD;indexer;
+bytag;DNTCR;routertag;exif;DNTCR;ACT_FORWARD;exif;
+bytag;DNTCR;routertag;antiword;DNTCR;ACT_FORWARD;antiword;
+bytag;DNTCR;routertag;pgp;DNTCR;ACT_FORWARD;pgp;
+bytag;DNTCR;routertag;pkr;DNTCR;ACT_FORWARD;pkr;
+bytag;DNTCR;routertag;mailsplit;DNTCR;ACT_FORWARD;mailsplit;
+bytag;DNTCR;routertag;outlook;DNTCR;ACT_FORWARD;outlook;
+bytag;DNTCR;routertag;7z;DNTCR;ACT_FORWARD;7z;
+bytag;DNTCR;routertag;zip;DNTCR;ACT_FORWARD;zip;
+bytag;DNTCR;routertag;gzip;DNTCR;ACT_FORWARD;gzip;
+bytag;DNTCR;routertag;tar;DNTCR;ACT_FORWARD;tar;
+bytag;DNTCR;routertag;bzip;DNTCR;ACT_FORWARD;bzip;
+bytag;DNTCR;routertag;pdftotext;DNTCR;ACT_FORWARD;pdftotext;
+bytag;DNTCR;routertag;objdump;DNTCR;ACT_FORWARD;objdump;
+bytag;DNTCR;routertag;sleuthkit;DNTCR;ACT_FORWARD;sleuthkit;
+#
+#########################################################################
+# Content types that are not currently parsable or usable or are jus to #
+# broad to do anything with at this point.                              #
+#########################################################################
+# Note: many of these types can be about anything. We need modules to do a better
+# job on these than the file module does.
+crapcontenttype;DNTCR;mimetype;application/octet-stream;DNTCR;ACT_COMMIT;dsm;
+crapcontenttype;DNTCR;mimetype;application;DNTCR;ACT_COMMIT;dsm;
+crapcontenttype;DNTCR;mimetype;image;DNTCR;ACT_COMMIT;dsm;
+crapcontenttype;DNTCR;mimetype;audio;DNTCR;ACT_COMMIT;dsm;
+crapcontenttype;DNTCR;mimetype;video;DNTCR;ACT_COMMIT;dsm;
+#
+#########################################################################
+# If all else fails, use the file extension to route on                 #
+#########################################################################
+fileext;DNTCR;fileextension;eml;DNTCR;ACT_FORWARD;mailwash;
+fileext;DNTCR;fileextension;pst;DNTCR;ACT_FORWARD;outlook;
+fileext;DNTCR;fileextension;dbx;DNTCR;ACT_FORWARD;dbxsplit;
+fileext;DNTCR;fileextension;pgp;DNTCR;ACT_FORWARD;pkr;
+fileext;DNTCR;fileextension;pkr;DNTCR;ACT_FORWARD;pkr;
+fileext;DNTCR;fileextension;gpg;DNTCR;ACT_FORWARD;pkr;
+fileext;DNTCR;fileextension;ask;DNTCR;ACT_FORWARD;pgp;
+fileext;DNTCR;fileextension;part;DNTCR;ACT_FORWARD;photorec;
+#

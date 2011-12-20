@@ -1,0 +1,8 @@
+#!/bin/bash
+CONF="/var/ocfa/httpd/${OCFACASE}.conf"
+if [ -h "$CONF" ]
+then
+    rm "$CONF"
+else
+    echo "Not found: $CONF"
+fi

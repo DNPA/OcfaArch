@@ -1,0 +1,7 @@
+23a24,25
+> $machine=lc(`uname -m`);
+> chomp($machine);
+28a31,33
+>   if ($machine eq "x86_64") {
+>     print MAKEINFO "GCCFLAGS += -DLINUX64 -D_REENTRANT\n";
+>   }

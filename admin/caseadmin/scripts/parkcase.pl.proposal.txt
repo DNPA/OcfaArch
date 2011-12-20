@@ -1,0 +1,45 @@
+This shrt memo describes a database only replacement for the makeoverview
+script. For efficient cgi based overviews as replacement of the pre
+generated html pages, we should create additional tables on the frontend
+database. We will take a liberal approach to table creation.
+It is sugested that the creation of these tables move to parkcase/preparetogui.
+
+First, to distinguish overview tables from regular tables we define
+a prefix 'ov' to be used on all overview table names.
+
+The overview its base view is based on the subdivision according to the
+digest source (DS) and item (IT), where each can be a wildcard.
+To facilitate this, we define a table prefix P2. The P2 prefix is
+defined as follow:
+
+  g   		:   both DS and IT are considdered wildcards here.
+  i<IT>		:   DS is considdered a wildcard for these tables.
+  d<DS>		:   IT is considdered a wildcard for these tables.
+  s<IT>_<DS>    :   Both DS and IT are specified.
+
+For each of the thus defined prefixes we define the folowing tables:
+
+The keys table for the main overview.
+
+  keys
+    *  meta_name   : The name of the meta data
+    *  dist        : The number of distinct values for thus named metadata.
+
+The meta count tables. Please note that these tables should only get created for meta keys
+that result in a reasonably limited set of distinct values. 
+
+  _<META>           : The name of the meta data
+    *  meta_val    : The value of the meta data
+    *  count       : The number of evidence files that hold this value for this metadata.
+
+The calender tables:
+
+   calendar
+     * name        : The key of the timestamp matadata.
+     * source      : The timesource string.
+     * day         : Must we explain ?
+     * count       : The number of evidence files that hold this value for the timestamp metadata.
+
+As an example, the full case wide calender table would be named 'ovgcalender' while a calender table
+for all evidences with a digest source 'KP' in item '19' would be named 'ovs19_KPcalendar' 
+

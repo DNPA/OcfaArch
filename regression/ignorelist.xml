@@ -1,0 +1,14 @@
+<ignoreset>
+ <meta containertype="scalar" metaname="accesstime" module="kickstart" scalartype="datetime"/>
+ <meta containertype="scalar" metaname="accesstime" module="mailwash" scalartype="datetime"/>
+ <meta containertype="scalar" metaname="accesstime" module="pdftotext" scalartype="datetime"/>
+ <meta containertype="scalar" metaname="changetime" module="kickstart" scalartype="datetime"/>
+ <meta containertype="scalar" metaname="changetime" module="mailwash" scalartype="datetime"/>
+
+ <meta containertype="scalar" metaname="changetime" module="pdftotext" scalartype="datetime"/>
+ <meta containertype="scalar" metaname="creatime" module="mailwash" scalartype="datetime"/>
+ <meta containertype="scalar" metaname="fileinfo" module="file" scalartype="string"/>
+ <meta containertype="scalar" metaname="modificationtime" module="kickstart" scalartype="datetime"/>
+ <meta containertype="scalar" metaname="modificationtime" module="mailwash" scalartype="datetime"/>
+ <meta containertype="scalar" metaname="modificationtime" module="pdftotext" scalartype="datetime"/>
+</ignoreset>

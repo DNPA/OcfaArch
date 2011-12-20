@@ -1,0 +1,28 @@
+//RJM:CODEREVIEW Tjis file is not used from makefile, candidate for removal, not completely sure though. 
+//  The Open Computer Forensics Architecture.
+//  Copyright (C) 2003..2006 KLPD  <ocfa@dnpa.nl>
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#include "../inc/misc.hpp"
+
+using namespace router;
+
+
+//Match class variable definition and initialization
+const string router::Match::StandardTarget = "EMPTY";   /**< Standard const class parameter */
+const string router::Match::StandardAction = "EMPTY";   /**< Standard const class parameter */
+const string router::Match::StandardArgument = "EMPTY"; /**< Standard const class parameter */
+

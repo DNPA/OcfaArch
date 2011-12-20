@@ -1,0 +1,13 @@
+g++ -c main.cpp -I../inc -o main.o -D_FILE_OFFSET_BITS=64 -g3
+g++ -c PersistentFifo.cpp -I../inc -o PersistentFifo.o  -D_FILE_OFFSET_BITS=64 -g3
+g++ -c ReadFile.cpp -I../inc -o ReadFile.o  -D_FILE_OFFSET_BITS=64 -g3 
+g++ -c StatusFile.cpp -I../inc -o StatusFile.o  -D_FILE_OFFSET_BITS=64 -g3
+g++ -c WriteFile.cpp -I../inc -o WriteFile.o -D_FILE_OFFSET_BITS=64 -g3
+g++ main.o PersistentFifo.o ReadFile.o StatusFile.o WriteFile.o -D_FILE_OFFSET_BITS=64 -o main
+g++ -c PersistentPriorityQueue.cpp  -I../inc -o PersistentPriorityQueue.o -D_FILE_OFFSET_BITS=64 -g3
+g++ -c main2.cpp  -I../inc -o main2.o -D_FILE_OFFSET_BITS=64 -g3
+g++ main2.o PersistentPriorityQueue.cpp -I../inc PersistentFifo.o ReadFile.o StatusFile.o WriteFile.o -D_FILE_OFFSET_BITS=64 -o main2
+g++ -c catstatus.cpp -I../inc -o catstatus.o -D_FILE_OFFSET_BITS=64 -g3
+g++ catstatus.o PersistentPriorityQueue.cpp -I../inc PersistentFifo.o ReadFile.o StatusFile.o WriteFile.o -D_FILE_OFFSET_BITS=64 -o catstatus
+g++ -c overview.cpp -I../inc -o overview.o -D_FILE_OFFSET_BITS=64 -g3
+g++ overview.o PersistentPriorityQueue.cpp -I../inc PersistentFifo.o ReadFile.o StatusFile.o WriteFile.o -D_FILE_OFFSET_BITS=64 -o ppqoverview

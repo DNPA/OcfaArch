@@ -1,0 +1,14 @@
+#!/bin/bash
+CONF="/var/ocfa/httpd/${OCFACASE}.conf"
+REALCONF="/var/ocfa/cases/${OCFACASE}/etc/apache_vhost.conf"
+if [ -h "$CONF" ]
+then
+    echo "ERROR: apache conf already online"
+else
+    if [ -f "$REALCONF" ]
+    then
+        ln -s "$REALCONF" "$CONF"
+    else
+        echo "No offline case found for $OCFACASE."
+    fi
+fi

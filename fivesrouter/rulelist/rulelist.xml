@@ -1,0 +1,418 @@
+<?xml version="1.0"?>
+<!--This document is a proposal for the rulelist for the 0.7 version of the router-->
+<!--It uses what the author believes to be the most relevant subset of the rulelist dtd -->
+<!--The 0.7 version of the router could implement this subset in order to come to a more -->
+<!--managable rulelist than what the 0.3 has proofed to be. The 0.7 version of the moduleset -->
+<!--could implement the missing modules (passwd,pgpextract,uuextract,tokenextract,uudecode) -->
+<!--in order to add extra functionality made possible and managable by this 0.7 router implementation -->
+<!--This rulelist (ant thus the proposed router/module combination for 0.7) combines :
+  * the full 0.3 rulelist features 
+  * some of the operational 0.4 rulelist
+  * some essential not yet implemented modules that make good use of sequence based routing 
+  * usefull  marking that make use of filepath and filename facades in the 0.5 library
+  * eternal loop protection
+  * better managebillity and flexability by use of multiple tables and metadata based rather than lastmodule based sequences
+  * better debugablillity by use of elog and router metadata
+  -->
+<rulelist>
+<!-- The default table, a lot shorter and simpler than before -->
+  <table name="default">
+<!--to avoid eternal loops, there are facades in the library that now suply hooks to stop these eternal loops-->
+    <rule name="parentcount">
+      <limitscalar type="int" matchtype="greater">200</limitscalar>
+      <addelog prio="err">Detected an aparent dissection loop</addelog>
+      <suspend>dsm</suspend>
+    </rule>
+    <rule name="jobcount">
+      <limitscalar type="int" matchtype="greater">200</limitscalar>
+      <addelog prio="err">Detected an aparent module loop</addelog>
+      <suspend>dsm</suspend>
+    </rule>
+<!--The router (in a prior incarnation) and some priviledged modules may have added a routing sequence metadata value ?-->
+<!--the sequences table wont return -->
+    <rule name="sequence">
+      <limitmodule>router</limitmodule>
+      <addelog prio="debug">Routing on prior set sequence</addelog>
+      <jump>sequences</jump>
+    </rule>
+    <rule name="sequence">
+      <limitmodule>strings</limitmodule>
+      <addelog prio="debug">Routing on prior set sequence from strings module</addelog>
+      <jump>sequences</jump>
+    </rule>
+<!-- the last module was the digest module ? jump to the digests table (wont return)-->
+    <rule datatype="moduleinstance" name="digest">
+      <addelog prio="debug">Routing on info from digest module</addelog>
+      <jump>digests</jump>
+    </rule>
+<!-- The file is an MS-office file ? we have a particular interest in those (wont return) -->
+    <rule name="oletype">
+      <addelog prio="debug">Routing on oletype info</addelog>
+      <jump>oletypes</jump>
+    </rule>
+<!-- If either the last module was 'file' or added file compiant metadata, lets jump to the basicfile table (wont return) -->
+    <rule datatype="moduleinstance" name="file">
+      <addelog prio="debug">Routing on info from file module</addelog>
+      <jump>basicfile</jump>
+    </rule>
+    <rule name="mimetop">
+      <addelog prio="debug">Routing on basic file info from module other than file</addelog>
+      <jump>basicfile</jump>
+    </rule>
+    <rule name="mimetype">
+      <addelog prio="err">Module created mimetype meta without mimetop info</addelog>
+      <suspend>dsm</suspend>
+    </rule>
+<!--Using the new facades in the library we can route based on location info (etcdir table might return) -->
+    <rule name="evidencelocation">
+      <limitscalar matchtype="regex">/etc[/$]</limitscalar>
+      <addelog prio="debug">File from any /etc subtree</addelog>
+      <jump>etcdir</jump>
+    </rule>
+<!--Any newly derived evidence can be routed on its inodetype (wont return) -->
+    <rule name="inodetype">
+      <addelog prio="debug">Routing on inode type of newly derived file</addelog>
+      <jump>inodetypes</jump>
+    </rule>
+<!--If nothing matches we assume that we are completely done, and submit to the datastore-->
+    <rule>
+      <addelog prio="info">No matching routing rules</addelog>
+      <commit>dsm</commit>
+    </rule>
+  </table>
+<!--To show how sequences could use the global and flexible metadata construct, a default-->
+<!--sequence of pgpextract uuextract lang tokenextract midas is defined, some of these -->
+<!--modules are not yet available at time of writing this rulelist, but the example would -->
+<!--have been rather bare without these in the example -->
+  <table name="sequences">
+    <rule name="sequence">
+      <limitscalar>pgpextract.uuextract.lang.tokenextract.midas</limitscalar>
+      <addmeta name="sequence">uuextract.lang.tokenextract.midas</addmeta>
+      <forward>pgpextract</forward>
+    </rule>
+    <rule name="sequence">
+      <limitscalar>uuextract.lang.tokenextract.midas</limitscalar>
+      <addmeta name="sequence">lang.tokenextract.midas</addmeta>
+      <forward>uuextract</forward>
+    </rule>
+    <rule name="sequence">
+      <limitscalar>lang.tokenextract.midas</limitscalar>
+      <addmeta name="sequence">tokenextract.midas</addmeta>
+      <forward>lang</forward>
+    </rule>
+    <rule name="sequence">
+      <limitscalar>tokenextract.midas</limitscalar>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+    <rule name="sequence">
+      <limitscalar>midas</limitscalar>
+      <forward>midas</forward>
+    </rule>
+    <rule>
+      <addelog prio="err">unknown sequence meta value</addelog>
+      <suspend>dsm</suspend>
+    </rule>
+  </table>
+<!--A short simple table for MS-office documents-->
+  <table name="oletypes">
+    <rule name="oletype">
+      <limitscalar>WordDocument</limitscalar>
+      <forward>antiword</forward>
+    </rule>
+    <rule name="oletype">
+      <limitscalar>Excel</limitscalar>
+      <forward>xlhtml</forward>
+    </rule>
+    <rule name="oletype">
+      <addelog prio="err">unknown type of office document</addelog>
+      <suspend>dsm</suspend>
+    </rule>
+  </table>
+<!--The routing of evidence based on basic file infoe is done in some instances using multiple -->
+<!--tables as to keep the rulelist both more efficient and readable. The main basicfile table  -->
+<!--looks just at the mimetop field, and jumps to a second table if more info is required -->
+  <table name="basicfile">
+    <rule name="mimetop">
+      <limitscalar>application</limitscalar>
+      <addelog prio="debug">Routing application/xxxxx</addelog>
+      <jump>mimeapplication</jump>
+    </rule>
+    <rule name="mimetop">
+      <limitscalar>text</limitscalar>
+      <addelog prio="debug">Routing text/xxxxx</addelog>
+      <jump>mimetext</jump>
+    </rule>
+    <rule name="mimetop">
+      <limitscalar>audio</limitscalar>
+      <addelog prio="debug">No modules for audio/xxxxx</addelog>
+      <commit>dsm</commit>
+    </rule>
+    <rule name="mimetop">
+      <limitscalar>font</limitscalar>
+      <addelog prio="debug">No modules for font/xxxxx</addelog>
+      <commit>dsm</commit>
+    </rule>
+    <rule name="mimetop">
+      <limitscalar>image</limitscalar>
+      <addelog prio="debug">No modules for image/xxxxx</addelog>
+      <commit>dsm</commit>
+    </rule>
+    <rule name="mimetop">
+      <limitscalar>video</limitscalar>
+      <addelog prio="debug">No modules for video/xxxxx</addelog>
+      <commit>dsm</commit>
+    </rule>
+    <rule name="mimetop">
+      <limitscalar>message</limitscalar>
+      <addelog prio="debug">Routing message/xxxxx to mailwash</addelog>
+      <addmeta name="sequence">pgpextract.uuextract.lang.tokenextract.midas</addmeta>
+      <forward>mailwash</forward>
+    </rule>
+    <rule name="mimetop">
+      <limitscalar matchtype="regex">^x</limitscalar>
+      <addelog prio="debug">No modules for x-xxxx/xxxxx</addelog>
+      <commit>dsm</commit>
+    </rule>
+<!--If nothing matches, the rulelist is missing a mimetop, so the file is suspended -->
+    <rule>
+      <addelog prio="err">Unknown mimetop</addelog>
+      <suspend>dsm</suspend>
+    </rule>
+  </table>
+<!--The (mostly binary) application/xxx mimetypes have their own table-->
+  <table name="mimeapplication">
+    <rule name="mimetype">
+      <limitscalar>application/x-zip</limitscalar>
+      <forward>zip</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-gzip</limitscalar>
+      <forward>gzip</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/compress</limitscalar>
+      <forward>gzip</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-tar</limitscalar>
+      <forward>tar</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-gtar</limitscalar>
+      <forward>tar</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/pdf</limitscalar>
+      <forward>pdftotext</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/pgp-encrypted</limitscalar>
+      <forward>pgp</forward>
+    </rule>
+<!--trying to extract language, uuencoded stuff etc from scripting files seems useless, thus we only index it and extract tokens -->
+    <rule name="mimetype">
+      <limitscalar>application/x-awk</limitscalar>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-csh</limitscalar>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-ksh</limitscalar>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-lisp</limitscalar>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-perl</limitscalar>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-sh</limitscalar>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-zsh</limitscalar>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+<!--The folowing rules are there for data types we dont encounter every day yet. We have not yet made -->
+<!--a module for them, thus if they are encountered, the files are suspended for manual extraction-->
+    <rule name="mimetype">
+      <limitscalar>application/x-arj</limitscalar>
+      <addelog prio="notice">No module available for arj files</addelog>
+      <suspend>dsm</suspend>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-bzip</limitscalar>
+      <addelog prio="notice">No module available for bzip files</addelog>
+      <suspend>dsm</suspend>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-bzip2</limitscalar>
+      <addelog prio="notice">No module available for bzip files</addelog>
+      <suspend>dsm</suspend>
+    </rule>
+<!--If the assumption that magic files have been patched holds true, and the magic entry is correct, than outlook files -->
+<!--will match on this line, files with the extention pst are thus suspended by the next rule for manual inspection -->
+    <rule name="mimetype">
+      <limitscalar>application/x-ocfa-outlook</limitscalar>
+      <addelog prio="notice">Forwarding to outlook module</addelog>
+      <forward>outlook</forward>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-ocfa-outlookexpres</limitscalar>
+      <forward>ol</forward>
+    </rule>
+    <rule name="fileextension">
+      <limitscalar>pst</limitscalar>
+      <addelog prio="notice">file with pst extension that did not match the pst signature of magic.mime</addelog>
+      <suspend>dsm</suspend>
+    </rule>
+<!--For some filetypes, the file extension is our only hope, unfortunately -->
+    <rule name="fileextension">
+      <limitscalar>pgp</limitscalar>
+      <forward>pgp</forward>
+    </rule>
+    <rule name="fileextension">
+      <limitscalar>pkr</limitscalar>
+      <forward>pkr</forward>
+    </rule>
+<!--For some mimetypes we know we have no module, and dont need one soon, these files are just send to the datastore-->
+    <rule name="mimetype">
+      <limitscalar>application/x-font</limitscalar>
+      <addelog prio="debug">No modules for application/x-font</addelog>
+      <commit>dsm</commit>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-gimp-brush</limitscalar>
+      <addelog prio="debug">No modules for application/x-gimp-brush</addelog>
+      <commit>dsm</commit>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-gimp-gradient</limitscalar>
+      <addelog prio="debug">No modules for application/x-gimp-gradient</addelog>
+      <commit>dsm</commit>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-gimp-image</limitscalar>
+      <addelog prio="debug">No modules for application/x-gimp-image</addelog>
+      <commit>dsm</commit>
+    </rule>
+    <rule name="mimetype">
+      <limitscalar>application/x-gimp-pattern</limitscalar>
+      <addelog prio="debug">No modules for application/x-gimp-pattern</addelog>
+      <commit>dsm</commit>
+    </rule>
+<!--If nothing matches we send it to strings, we must tell the strings module to add -->
+<!--sequence metadata to the derived files, and as the sequence we wish depends on the -->
+<!--type of the original file, we use multiple rules to set the child sequence for different file extensions-->
+    <rule name="fileextension">
+      <limitscalar>dll</limitscalar>
+      <addelog prio="debug">the strings output from dll files is usefull for determining OS and software languages</addelog>
+      <addjobarg name="setsequence">lang.tokenextract.midas</addjobarg>
+      <forward>strings</forward>
+    </rule>
+    <rule>
+      <addelog prio="notice">Unknown application/xxx mimetype routing to strings</addelog>
+      <addjobarg name="setsequence">tokenextract.midas</addjobarg>
+      <forward>strings</forward>
+    </rule>
+  </table>
+<!--Simple table for processing text files (with mimetop=text), all these text files will eventualy-->
+<!--traverse the full basic sequence. Some specific cases will also need to first be forwarded -->
+<!--to some other module (mailwash,pgp,uudecode) -->
+  <table name="mimetext">
+    <rule name="mimetype">
+      <limitscalar>text/x-mail</limitscalar>
+      <addmeta name="sequence">pgpextract.uuextract.lang.tokenextract.midas</addmeta>
+      <forward>mailwash</forward>
+    </rule>
+    <rule name="fileextension">
+      <limitscalar>eml</limitscalar>
+      <addmeta name="sequence">pgpextract.uuextract.lang.tokenextract.midas</addmeta>
+      <forward>mailwash</forward>
+    </rule>
+    <rule name="fileextension">
+      <limitscalar>asc</limitscalar>
+      <addmeta name="sequence">pgpextract.uuextract.lang.tokenextract.midas</addmeta>
+      <forward>pgp</forward>
+    </rule>
+    <rule name="fileinfo">
+      <limitscalar matchtype="regex">uuencoded</limitscalar>
+      <forward>uudecode</forward>
+    </rule>
+    <rule>
+      <addmeta name="sequence">uuextract.lang.tokenextract.midas</addmeta>
+      <forward>pgpextract</forward>
+    </rule>
+  </table>
+<!--If nothing else is known about newly derived evidence, the inode type is used for routing-->
+<!--files are sent to the digest module, and any other type is directly sent to the datastore-->
+  <table name="inodetypes">
+    <rule name="inodetype">
+      <limitscalar>file</limitscalar>
+      <forward>digest</forward>
+    </rule>
+    <rule>
+      <addelog prio="debug">Nothing to do for non file evidence</addelog>
+      <commit>dsm</commit>
+    </rule>
+  </table>
+<!--A small table for metadata comming from the digest module. Basicly known files are sent to-->
+<!--the datastore directly while not known files are sent to the file module for further processing-->
+  <table name="digests">
+    <rule name="digestsource">
+      <limitscalar>UNDEF</limitscalar>
+      <jump>file</jump>
+    </rule>
+<!--This rule is there for legacy reasons, lets hope the user interface has fixed the need for this line -->
+<!--by the time this rulelist will get used. This rule is pressent due to a flaw in the userinterface -->
+    <rule name="digestsource">
+      <limitscalar>SELF</limitscalar>
+      <jump>file</jump>
+    </rule>
+    <rule>
+      <addelog prio="debug">Nothing to do for file that is identified by its digest</addelog>
+      <commit>dsm</commit>
+    </rule>
+  </table>
+<!--A simple demo table for routing based on file names and paths -->
+<!--please note that this table will often return if no match is found.-->
+  <table name="etcdir">
+    <rule name="evidencepath">
+      <limitscalar>passwd</limitscalar>
+      <addmeta name="systemfile">system user index</addmeta>
+      <addmeta name="sequence">tokenextract.midas</addmeta>
+      <forward>passwd</forward>
+    </rule>
+    <rule name="evidencepath">
+      <limitscalar matchtype="regex">^ifcfg-</limitscalar>
+      <addmeta name="systemfile">network interface config file</addmeta>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+    <rule name="evidencepath">
+      <limitscalar>hosts</limitscalar>
+      <addmeta name="systemfile">network config file</addmeta>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+    <rule name="evidencepath">
+      <limitscalar>resolv.conf</limitscalar>
+      <addmeta name="systemfile">network config file</addmeta>
+      <addmeta name="sequence">midas</addmeta>
+      <forward>tokenextract</forward>
+    </rule>
+  </table>
+</rulelist>

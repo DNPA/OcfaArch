@@ -1,0 +1,153 @@
+#Tabel;namespace;type;value;last_module;FinalAction;Target;Argumenten
+##################################################################
+#   The table into what all evidence enters the router           #
+##################################################################
+# If the last module said the data had an invalid format, let a digital investigator look at it.
+default;DNTCR;validformat;0;DNTCR;ACT_FORWARD;lexmodule;
+#Put a braik on the number of jobs a single evidence could have traversed.
+default;DNTCR;jobcount;20;DNTCR;ACT_COMMIT;dsm;
+#Anything with a nodetype must be something just derived.
+default;DNTCR;nodetype;DNTCR;DNTCR;ACT_JUMP;newnode;
+#If fsstat has seen a filesystem here, lets send look at that closer, different filesystems may go to different modules.
+default;DNTCR;FileSystemType;DNTCR;fsstat;ACT_JUMP;filesystems;
+#If all else fails, use the last module to route on.
+default;DNTCR;DNTCR;DNTCR;DNTCR;ACT_JUMP;lastmodule;
+#############################################################
+#For newly derived nodes, put a brake on the number of parents there could be.
+newnode;DNTCR;parentcount;90;DNTCR;ACT_COMMIT;dsm;
+#If we have a non empty datasha1, than our node has data and we process it in the newdatanode table.
+#There is no way to check for empty string, so the folowing 16 lines are a bit of a hack to test for
+#non empty strings.
+newnode;DNTCR;datasha1;0;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;1;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;2;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;3;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;4;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;5;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;6;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;7;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;8;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;9;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;a;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;b;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;c;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;d;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;e;DNTCR;ACT_JUMP;newdatanode;
+newnode;DNTCR;datasha1;f;DNTCR;ACT_JUMP;newdatanode;
+#Any node remaining is a node with no data in it.
+#A deleted file could have no data, so thats ok.
+newnode;DNTCR;isdeleted;1;DNTCR;ACT_COMMIT;dsm;
+#An emptyfile can have no data, so that's ok.
+newnode;DNTCR;nodetype;emptyfile;DNTCR;ACT_COMMIT;dsm;
+#Files, alternatestreams, swap, disk-image/no-ptable, disk-image/empty-ptable, unallocateddiskspace, disk-image and diskpartition should always have data.
+#So if we see any of these without, its not good.
+newnode;DNTCR;nodetype;file;DNTCR;ACT_FORWARD;bogusdatanode;
+newnode;DNTCR;evidencelocation;<attribute::data::$BAD>;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;alternatestream;DNTCR;ACT_FORWARD;bogusdatanode;
+newnode;DNTCR;nodetype;swap;DNTCR;ACT_FORWARD;bogusdatanode;
+newnode;DNTCR;nodetype;disk-image/no-ptable;DNTCR;ACT_FORWARD;bogusdatanode;
+newnode;DNTCR;nodetype;disk-image/empty-ptable;DNTCR;ACT_FORWARD;bogusdatanode;
+newnode;DNTCR;nodetype;unallocateddiskspace;DNTCR;ACT_FORWARD;bogusdatanode;
+newnode;DNTCR;nodetype;slack;DNTCR;ACT_FORWARD;bogusdatanode;
+newnode;DNTCR;nodetype;disk-image;DNTCR;ACT_FORWARD;bogusdatanode;
+newnode;DNTCR;nodetype;diskpartition;DNTCR;ACT_FORWARD;bogusdatanode;
+#Directories have no data, so that's ok.
+newnode;DNTCR;nodetype;dir;DNTCR;ACT_COMMIT;dsm;
+#Softlink's don't need to have data, so that's ok.
+newnode;DNTCR;nodetype;softlink;DNTCR;ACT_COMMIT;dsm;
+#Fifo node's, characterdevice, blockdevices, sockets and  whiteouts should have no data, so that's OK.
+newnode;DNTCR;nodetype;fifo;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;characterdevice;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;blockdevice;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;socket;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;whiteout;DNTCR;ACT_COMMIT;dsm;
+#Filesystems, vtmetas and libtsk3_virtual may have no data, so that's OK.
+newnode;DNTCR;nodetype;vtmeta;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;filesystem;DNTCR;ACT_COMMIT;dsm;
+newnode;DNTCR;nodetype;libtsk3_virtual;DNTCR;ACT_COMMIT;dsm;
+#Pseudodirs should have no data, so that's OK.
+newnode;DNTCR;nodetype;pseudodir;DNTCR;ACT_COMMIT;dsm;
+#If a node has nodetype undefined, that's not good, lets put those nodes to the side.
+newnode;DNTCR;nodetype;undefined;DNTCR;ACT_FORWARD;undefnodetype;
+#Any other node type is invalid.
+newnode;DNTCR;nodetype;DNTCR;DNTCR;ACT_FORWARD;badnodetype;
+#############################################################
+#First check for known empty and functionaly empty files.
+newdatanode;DNTCR;datasha1;da39a3ee5e6b4b0d3255bfef95601890afd80709;DNTCR;ACT_COMMIT;dsm;
+newdatanode;DNTCR;datasha1;adc83b19e793491b1c6ea0fd8b46cd9f32e592fc;DNTCR;ACT_COMMIT;dsm;
+newdatanode;DNTCR;datasha1;ba8ab5a0280b953aa97435ff8946cbcbb2755a27;DNTCR;ACT_COMMIT;dsm;
+#An empty file should have no data, so if it has, there is something wrong.
+newdatanode;DNTCR;nodetype;emptyfile;DNTCR;ACT_FORWARD;bogusnodedata;
+#If our data node is a file or alternatestream, process it as a new file.
+newdatanode;DNTCR;nodetype;file;DNTCR;ACT_JUMP;newfiles;
+newdatanode;DNTCR;nodetype;alternatestream;DNTCR;ACT_JUMP;newfiles;
+#Swap, disk-image/no-ptable, disk-image/empty-ptable and unallocateddiskspace should go to the carver.
+newdatanode;DNTCR;nodetype;swap;DNTCR;ACT_FORWARD;carver;
+newdatanode;DNTCR;nodetype;disk-image/no-ptable;DNTCR;ACT_FORWARD;carver;
+newdatanode;DNTCR;nodetype;disk-image/empty-ptable;DNTCR;ACT_FORWARD;carver;
+newdatanode;DNTCR;nodetype;unallocateddiskspace;DNTCR;ACT_FORWARD;carver;
+newdatanode;DNTCR;nodetype;slack;DNTCR;ACT_FORWARD;dsm;
+#disk-image and diskpartition may hold a filesystem, send it to fsstat to check that.
+newdatanode;DNTCR;nodetype;disk-image;DNTCR;ACT_FORWARD;fsstat;
+newdatanode;DNTCR;nodetype;diskpartition;DNTCR;ACT_FORWARD;fsstat;
+#directories should have no data, if they do, that's not OK.
+newdatanode;DNTCR;nodetype;dir;DNTCR;ACT_FORWARD;bogusnodedata;
+#Softlinks with libtsk may have data, we may want to look into this one to check if it makes sense. 
+newdatanode;DNTCR;nodetype;softlink;DNTCR;ACT_FORWARD;dsm;
+#A fifo, characterdevice, blockdevice, socket or whiteout should not have any data, if it does, that's not OK.
+newdatanode;DNTCR;nodetype;fifo;DNTCR;ACT_FORWARD;bogusnodedata;
+newdatanode;DNTCR;nodetype;characterdevice;DNTCR;ACT_FORWARD;bogusnodedata;
+newdatanode;DNTCR;nodetype;blockdevice;DNTCR;ACT_FORWARD;bogusnodedata;
+newdatanode;DNTCR;nodetype;socket;DNTCR;ACT_FORWARD;bogusnodedata;
+newdatanode;DNTCR;nodetype;whiteout;DNTCR;ACT_FORWARD;bogusnodedata;
+#vtmata may or may not have data, so that's OK.
+newdatanode;DNTCR;nodetype;vtmeta;DNTCR;ACT_COMMIT;dsm;
+#A filesystem node, of what we're not sure of its type should go to fsstat for checking.
+newdatanode;DNTCR;nodetype;filesystem;DNTCR;ACT_FORWARD;fsstat;
+#libtsk3_virtual may or may not have data, so that's OK.
+newdatanode;DNTCR;nodetype;libtsk3_virtual;DNTCR;ACT_COMMIT;dsm;
+#A pseudodir should not have data, so that;s not OK.
+newdatanode;DNTCR;nodetype;pseudodir;DNTCR;ACT_FORWARD;bogusnodedata;
+#If a node has nodetype undefined, that's not good, lets poot those nodes to the side.
+newdatanode;DNTCR;nodetype;undefined;DNTCR;ACT_FORWARD;undefnodetype;
+#Any other node type is invalid.
+newdatanode;DNTCR;nodetype;DNTCR;DNTCR;ACT_FORWARD;badnodetype;
+##################################################################
+#For now send all filesystems to tskfs. We may later want to send some to snorkel and some to tskfs
+#depending on the type.
+filesystems;DNTCR;FileSystemType;DNTCR;DNTCR;ACT_FORWARD;tskfs;
+##################################################################
+# All new files comming either directly from the kickstart or    #
+# having just been derived from other evidence by some module    #
+################################################################## 
+# If the new file comes from a kickstart module, look if it is likely to be an image.
+newfiles;DNTCR;DNTCR;DNTCR;kickstart;ACT_JUMP;images;
+#For all other new stuff, everything is OK.
+newfiles;DNTCR;nodetype;DNTCR;DNTCR;ACT_FORWARD;dsm;
+###################################################################
+# If there is no metadata to route on, us the last module that    #
+# processed the (not newly derived) evidence.                     #
+# Explicitly send to the dsm if we know we should.                #
+###################################################################
+#If tskfs is done with it, blkls can look at the unallocated.
+lastmodule;DNTCR;DNTCR;DNTCR;tskfs;ACT_FORWARD;blkls;
+#If fsstat found no filesystem, maybe mmls will find a partition table.
+lastmodule;DNTCR;DNTCR;DNTCR;fsstat;ACT_FORWARD;mmls;
+###################################################################
+# Processing of images that are entered directly                  #
+###################################################################
+#For kickstarted files, look at the extention of files for potential image files.
+images;DNTCR;evidencelocation;.crv;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.img;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.IMG;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.dd;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.DD;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.e01;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.E01;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.aff;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.AFF;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.ISO;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.iso;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.RAW;DNTCR;ACT_FORWARD;fsstat;
+images;DNTCR;evidencelocation;.raw;DNTCR;ACT_FORWARD;fsstat;
+#

@@ -1,0 +1,23 @@
+how to compile this extension.
+
+make surce php devel is installed. Also make sure the pgsql extension is installed.
+go into this directory.
+type:
+> phpize
+> configure
+
+open de Makefile and change gcc into g++
+also add -locfaquerylucene to the variable LDFLAGS 
+type:
+> make
+> make install
+
+in order to have the interface running you should set:
+register_globals = 0n
+in the php.ini file (prbably located in /etc/php5/apache2/php.ini
+you should also add
+extension=ocfalucene.so 
+
+
+
+

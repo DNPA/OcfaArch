@@ -1,0 +1,7 @@
+In the folowing line, replace CASE with the name of your case.
+
+echo select repname from metastoreentity |psql CASE|sed -e 's/^ /\/var\/ocfa\/CASE\/repository/'|grep -v repname|grep -v "\-"|./step1.pl |grep size >step1.out
+
+cat step1.out |sort|uniq >step1b.out
+
+cat step1b.out|./step2.pl > step2.xml

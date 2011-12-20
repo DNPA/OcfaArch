@@ -1,0 +1,27 @@
+FinalAction			OK
+FinalActionCommit		OK
+FinalActionForward		OK
+FinalActionJump			DEFERED NOT YET USED
+FinalActionReturn		DEFERED NOT YET USED
+FinalActionSuspend		OK
+Limit				OK
+LimitArray			DEFERED NOT YET IMPLEMENTED
+LimitHost			DEFERED NOT YET IMPLEMENTED
+LimitModule			OK
+LimitNamespace			OK
+LimitScalar			REVIEWED
+LimitTable			DEFERED NOT YET IMPLEMENTED
+Rule				REVIEWED
+RuleList			REVIEWED
+SideAction			DEFERED NOT YET USED
+SideActionAddJobArgument	DEFERED NOT YET IMPLEMENTED
+SideActionAddMeta		DEFERED NOT YET USED
+SideActionELog			DEFERED NOT YET IMPLEMENTED
+SideActionLog			DEFERED NOT YET IMPLEMENTED
+Table				REVIEWED
+domrulelist			DEFERED NOT YET COMPLETED
+main				OK
+packet_type			REVIEWED
+router				REVIEWED
+PacketContainer			NEW+INCOMPLETE (sugested replacement for packet_vector)
+

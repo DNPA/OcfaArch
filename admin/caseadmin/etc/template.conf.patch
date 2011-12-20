@@ -1,0 +1,5 @@
+0a1,4
+> fsmod_tskcp=libCpSleuthkit.so
+> rwmounts=carvpath
+> kickstart:rwmounts=testrun
+> eekickstart:rwmounts=testrun

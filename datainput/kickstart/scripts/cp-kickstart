@@ -1,0 +1,226 @@
+#!/usr/bin/perl
+use strict;
+our $OCFAROOT;
+our $CARVFSROOT;
+our $OCFACASE;
+our $INTERACTIVE;
+our $FORCE;
+our $REATTACH;
+sub usage {
+   if ($REATTACH) {
+       print "Usage:\n\t$0 <case>\n\n";
+   } else {
+       print "Usage:\n\t$0 <case> [-i] [-f]\n\n\t-i:\tInteractive mode\n\t-f\tForce non matching embedded case id's\n\b"; 
+   }
+}
+
+sub dokickstart {
+  my ($path)=@_;
+  if ($REATTACH) {
+     return 0;
+  }
+  my $flags="";
+  if ($FORCE) {
+    $flags="-f";
+  }
+  my $cmd="${OCFAROOT}/sbin/cp-kickstart-ll ${path}/CarvFS.crv $OCFACASE $flags";
+  qx/$cmd/;
+  #NOTE: we do not use the exit vallue !!
+  return 1;
+}
+
+sub getsubfiles {
+   my ($dir)=@_;
+   my @rval=();
+   my $fil;
+   unless (opendir(D1,$dir)) {
+      return;
+   }
+   while($fil=readdir(D1)) {
+      if (-f "${dir}/$fil") {
+         push(@rval,"${dir}/$fil");
+      }
+   }
+   return sort(@rval);
+}
+
+sub fixmissing {
+  my ($basedir,$case,$src,$item)=@_;
+  my ($missing,$rep);
+  $rep="${basedir}/ocfa.repository";
+  $missing="${basedir}/ocfa.missing";
+  if (-f $missing) {
+    open(MISSING,">$missing");
+    print MISSING "${case}:${src}:${item}\n";
+    close(MISSING);
+  } else {
+    unless (-f $rep) {
+      print STDERR "ERROR Neither ocfa.missing nor ocfa.repository found under '$basedir'\n";
+      return 0;
+    }
+    return 1;
+  }
+  unless (-f $rep) {
+    print STDERR "ERROR Failed to setup basic metadatai for $basedir\n";
+    if ($INTERACTIVE) {
+        unless ($src) {
+           print "evidence source:";
+           $src=<>; 
+        }
+        unless ($item) {
+           print "item:";
+           $item=<>;
+        }
+        open(MISSING,">$missing");
+        print MISSING "${case}:${src}:${item}\n";
+        close(MISSING);
+        unless (-f $rep) {
+           return 0;
+        } else {
+           return 1;
+        } 
+    }
+    return 0;
+  }
+  return 1;
+}
+
+sub doewf {
+  my ($case,$esrc,$item,$path)=@_;
+  my @subfiles=($path);
+  my $rval="";
+  if (-d $path) {
+    @subfiles=&getsubfiles($path); 
+  } 
+  my $subfiles=join(" ",@subfiles);
+  my $cmd="/usr/local/bin/carvfs /var/ocfa/${OCFACASE}/repository/carvfs ewf $subfiles";
+  $!="";
+  unless (open(RDATA,"$cmd|")) {
+     print "ERROR: problem starting carvfsewf for $subfiles\n";
+     return 0;
+  }
+  while(<RDATA>) {
+     $rval .= $_;
+  }
+  close(RDATA);
+  $rval =~ s/\r.*//g;
+  $rval =~ s/\n.*//g;
+  if ( &fixmissing($rval,$case,$esrc,$item) ) {
+     return &dokickstart($rval);
+  } else {
+     return 0;
+  }
+}
+sub doaff {
+  my ($case,$esrc,$item,$path)=@_;
+  print STDERR "ERROR AFF file format currently not yet supported for $path\n";
+  return 0;
+}
+sub doraw {
+  my ($case,$esrc,$item,$path,$md5)=@_;
+  print STDERR "ERROR RAW file format currently not yet supported for $path\n";
+  return 0;
+}
+sub doitem {
+  my ($item)=@_;
+  $item =~ s/\r//g;
+  chomp($item);
+  my ($case,$type,$path,$md5,$esrc,$item) = split(/;/,$item);
+  if ($type eq "ewf") {
+     return &doewf($case,$esrc,$item,$path);
+  } elsif ($type eq "aff") {
+     return &doaff($case,$esrc,$item,$path);
+  } elsif ($type eq "raw") {
+     return &doraw($case,$esrc,$item,$path,$md5);
+  }
+  else {
+     print STDERR "CONFIG ERROR, Unknown type: '$type'\n";
+     return 0;
+  }
+}
+$OCFAROOT=$ENV{"OCFAROOT"};
+$OCFACASE=$ENV{"OCFACASE"};
+$REATTACH=0;
+if ($0 =~ /reattach$/) {
+  $REATTACH=1;
+}
+my $TOCFACASE="";
+$INTERACTIVE=0;
+$FORCE=0;
+unless ($OCFAROOT) {
+   print STDERR "OCFAROOT has not been set in your enviroment\n";
+   exit;
+}
+unless ($OCFACASE) {
+   print STDERR "OCFACASE has not been set for your enviroment\n";
+   exit;
+}
+$CARVFSROOT="/var/ocfa/${OCFACASE}/repository/carvfs";
+unless (-d $CARVFSROOT) {
+  print STDERR "Creating missing /var/ocfa/${OCFACASE}/repository/carvfs directory\n";
+  unless (mkdir("/var/ocfa/${OCFACASE}/repository/carvfs")) {
+     print STDERR "Unable to create missing /var/ocfa/${OCFACASE}/repository/carvfs directory\n";
+     exit;
+  }
+  print STDERR "done\n";
+}
+my $arg;
+foreach $arg (@ARGV) {
+  if ($arg eq "-i") {
+      $INTERACTIVE=1;
+  }
+  elsif ($arg eq "-f") {
+      $FORCE=1;
+  }
+  else {
+     if ($TOCFACASE) {
+        &usage();
+        exit ;
+     }
+     $TOCFACASE=$arg;
+  }
+}
+unless ($TOCFACASE) {
+    &usage();
+    exit ;
+}
+unless ($TOCFACASE eq $OCFACASE) {
+    print "ERROR: active case '$OCFACASE' does not match supplied case '$TOCFACASE'\n";
+    exit;
+}
+unless (open(CONF,"${OCFAROOT}/etc/cp.conf")) {
+   print STDERR "No config file found for carvpath at ${OCFAROOT}/etc/cp.conf\n";
+   exit;
+}
+my @TODO=<CONF>;
+close(CONF);
+my %KICKDONE=();
+if (open(LOG,"/var/ocfa/${OCFACASE}/repository/carvfs/kick.log")) {
+  while (<LOG>) {
+    $KICKDONE{"$_"}=1;
+  }
+  close(LOG);
+}
+my $item;
+foreach $item (@TODO) {
+  if ($item =~ /^${OCFACASE};/) {
+    if ($KICKDONE{"$item"} xor $REATTACH) {
+      if ($REATTACH) {
+         print "INFO: not reatached, not yet kickstarted: $item";
+      } else {
+         print "INFO: already processed: $item";
+      }
+    } else {
+      if (&doitem($item) && (!$REATTACH)) {
+         open(LOG,">>/var/ocfa/${OCFACASE}/repository/carvfs/kick.log");
+         print LOG "$item";
+         close(LOG);
+      }
+    }
+  } else {
+     if (!(($item =~ /^$/)|| ($item =~ /^\s*#/))) {
+        print "NOTICE skipping '$item'\n";
+     }
+  }
+}
+print "\n";

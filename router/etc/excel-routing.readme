@@ -1,0 +1,21 @@
+Routering naar volgende modules
+
+Modules:
+"excel" is w32module
+"ole2txt is javamodule
+"antiword" native module
+
+
+
+IF Lastmodule=antiword THEN route to strings
+IF mime=application/msword THEN route to antiword
+
+IF Lastmodule=ole2txt THEN route to excel
+IF fileinfo=Microsoft Office Document THEN route to ole2txt
+
+
+IF fileextension=doc THEN route to ole2txt
+IF fileextension=xls THEN route to excel
+
+
+

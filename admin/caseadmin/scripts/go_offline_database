@@ -1,0 +1,16 @@
+#!/bin/bash
+DUMPFILE="/var/ocfa/cases/${OCFACASE}/offline/database_dump.tar"
+pg_dump --format=tar -f $DUMPFILE "$OCFACASE"
+if [ $? -eq "0" ]
+then
+   echo "Dumping database OK"
+else
+   echo "Dumping database failed"
+   exit 1
+fi
+echo are your sure you want to delete database $OCFACASE \(y/N\)
+read CONFIRM
+if [ $CONFIRM = 'y' ]
+    then dropdb $OCFACASE
+    echo database deleted
+fi

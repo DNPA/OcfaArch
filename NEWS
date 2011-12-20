@@ -1,0 +1,8 @@
+2006-12 : Packaged a wide range of bug fixes.
+          Extended the ppqoverview interface to beter integrate with the meta browse view.
+2006-05 : Updated copyrights to GPL.
+          Patches to allow clean install on Debian (etch + ubuntu) 
+	    and Suse (9.3 + 10.1) platforms.
+          Released OcfaArch 0.6.0pl2 (Wasstraat 2.0.2)
+2006-04 : First official release for the OcfaArch as migrated from digiwash1.
+          OcfaArch 0.6 (Wasstraat 2.0)

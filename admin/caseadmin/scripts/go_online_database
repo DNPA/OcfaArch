@@ -1,0 +1,24 @@
+#!/bin/bash
+DUMPFILE="/var/ocfa/cases/${OCFACASE}/offline/database_dump.tar"
+createdb "$OCFACASE"
+if [ $? -eq "0" ]
+then
+   echo "Creating database OK"
+else
+   echo "Creating database failed"
+   exit 1
+fi
+pg_restore -d "$OCFACASE" "$DUMPFILE"
+if [ $? -eq "0" ]
+then
+   echo "Restoring work database OK"
+else
+   echo "Restoring work database failed"
+   exit 1
+fi
+echo are your sure you want to delete database $OCFACASE offline dump file? \(y/N\)
+read CONFIRM
+if [ $CONFIRM = 'y' ]
+    then rm "$DUMPFILE"
+    echo database offline dump file deleted
+fi

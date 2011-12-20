@@ -1,0 +1,6 @@
+Package: ocfa-router-fives
+Version: 2.3.0
+Architecture: amd64
+Depends: ocfa-lib,ocfa-anycastrelay
+Maintainer: Klpd <ocfa@dnpa.nl>
+Description: An alternative router for the Open Computer Forensics Architecture contributed by the FIVES project.

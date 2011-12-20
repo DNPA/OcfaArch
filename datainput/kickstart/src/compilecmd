@@ -1,0 +1,1 @@
+g++ kickstart.cpp -o kickstart -I/home/oscar/OcfaLib/inc/facade -I/home/oscar/OcfaLib/inc/ -L /home/oscar/ACE/ACE_wrappers -L/usr/local/digiwash/lib -locfamisc -locfafacade -locfamodule -locfastore -locfafs -locfaevidence -lACE

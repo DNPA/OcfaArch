@@ -1,0 +1,8 @@
+
+VERSION: 2
+
+label:
+
+nodetype SMATCH file; ACT_JUMP; label_bla;
+DNTCR SMATCH DNTCR; ACT_COMMIT; dsm;
+

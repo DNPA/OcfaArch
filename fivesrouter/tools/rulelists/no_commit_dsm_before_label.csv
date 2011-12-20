@@ -1,0 +1,11 @@
+
+VERSION: 2
+
+label:
+
+nodetype SMATCH file; ACT_FORWARD; file;
+
+label2:
+
+DNTCR SMATCH DNTCR; ACT_COMMIT; dsm;
+

@@ -1,0 +1,9 @@
+* Add the ocfa user in a debian package on what the other pachaged depend.
+* Add the /var/ocfa directory creation.
+* Set the proper access rights for user/group in various packages.
+* Add one or more debian package for the admin stuff.
+* Add one or more debian packages for the metagui stuff.
+* Add a debian package for kaas.
+* Figure out what to do with the apache config stuff.
+* Add a package for setting up the ocfa user on postgress.
+* Figure out what to do with production vs test envinronment setup and packages.

@@ -1,0 +1,36 @@
+labels..
+	a map of names -> rulenumbers ?
+	a label has no rulenumber
+	
+
+testa andra operatorer än SMATCH
+
+Hitta pålitligt sätt att spara senaste regeln!
+ - i Evidence funkar inte, det görs nya hela tiden
+ - i packet vectorn? mindre bra att pv behöver ändra ett värde
+   * Type= LastRule
+   * Value= "0...RuleCount" string variant av unsigned int (via Scalar)
+   * 
+
+se till att alla JUMPs går till existerande labels.
+  - vector jumps   \ jämför
+  - vector labels  / dessa
+
+
+
+
+
+Mindre aktuellt, gammalt:
+
+för varje regel, gå igenom alla packets bakifrån
+ -> börjar matchning uppifrån
+ -> senaste metadata undersöks (först?)
+
+
+
+
+senaste regeln måste kännas till
+alla metadata ska gås igenom (bakifrån? spelar ingen roll)
+
+för varje regel (börja på LastRule ), kolla om nån regel matchar och hitta finalaction
+

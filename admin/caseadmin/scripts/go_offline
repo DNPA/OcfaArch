@@ -1,0 +1,4 @@
+#!/bin/bash
+/usr/local/digiwash/bin/go_offline_httpd
+/usr/local/digiwash/bin/go_offline_ppq
+/usr/local/digiwash/bin/go_offline_database

@@ -1,0 +1,16 @@
+59a60
+>   
+136a138,140
+>   void ModuleType::recoverNow() {
+>     _ppq->recoverNow();
+>   }
+151a156,157
+>    
+> 
+284a291,296
+>   void AnyCast::recoverNow() {
+>      for (map<string, ModuleType * >::iterator itr = _modules.begin(); itr != _modules.end(); itr++){
+>         itr->second->recoverNow(); 
+>     }
+>   }
+> 

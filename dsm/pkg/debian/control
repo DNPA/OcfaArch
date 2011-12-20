@@ -1,0 +1,6 @@
+Package: ocfa-dsm-basic
+Version: 2.3.0
+Architecture: amd64
+Depends: ocfa-lib,libpq-dev
+Maintainer: Klpd <ocfa@dnpa.nl>
+Description: The standard (klpd) data store module for the Open Computer Forensics Architecture.

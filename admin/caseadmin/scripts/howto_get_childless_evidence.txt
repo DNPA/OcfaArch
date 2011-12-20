@@ -1,0 +1,22 @@
+1. Create table childcount
+	createtablechildcount.sql
+2. Create stored procedures
+	proc_childcountforevidence.sql
+	proc_nochild4extension.sql
+
+
+3. Fill Table childcount
+
+INSERT INTO childcount 
+SELECT mi.metadataid, childcountforevidence(evidence) 
+FROM metadatainfo mi, rowfileextension f 
+WHERE mi.metadataid=f.metadataid and f.meta='xls';
+
+4. Query table childcount
+
+SELECT * from nochild4extension('xls',100);
+
+Je kunt stap 3 en 4 herhalen, maar dan moet wel
+de tabel childcount leeggemaakt worden.
+
+

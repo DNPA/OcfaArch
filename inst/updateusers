@@ -1,0 +1,236 @@
+#!/usr/bin/perl
+
+#  The Open Computer Forensics Architecture.
+#  Copyright (C) 2003..2006 KLPD  <ocfa@dnpa.nl>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+$MAXCONNECTIONS=60;
+$ocfa="";
+$apache="";
+sub psqlversion {
+ my $rval="";
+ if (opendir(D1,"/etc/postgresql")) {
+   while (my $inode=readdir(D1)) {
+      if ($inode =~ /^(\d.*)$/) {
+        if ($rval) {
+           print STDERR "Multiple versions of postgess database server found : $1 $rval , abborting install\n";
+           exit(1);
+        } else {
+           $rval=$1;
+        } 
+      }
+   }   
+ }  else {
+   $rval="undefined";
+ }
+ return $rval; 
+}
+
+sub adduser {
+  my ($user)=@_;
+  my $userlist="";
+  open(GRP,"/etc/group")|| die "Unable to open /etc/group for reading";
+  while(<GRP>) {
+     if (/^ocfa:.*:(.*)$/) {
+        $userlist=$1;
+     }
+  }
+  if ($userlist =~ /$user/) {
+      print "$user already part of group ocfa\n";
+  } else {
+      print "adding $user to group ocfa\n";
+      $rval=`/usr/sbin/usermod -G ocfa $user`;
+      print "$rval\n";
+  }
+}
+$dbinstall=1;
+$pversion=&psqlversion();
+if (open(CONF,"/var/lib/postgres/data//postgresql.conf") || open(CONF,"/etc/postgresql/$pversion/main/postgresql.conf")) {
+   print "postgresql.conf database configuration file found\n";
+   while(<CONF>) {
+      if (/Open Computer Forensic Architecture/) {
+         $dbinstall=0;
+         print "postgresql.conf database configuration file was already tuned previously\n";
+      }
+   }
+   close(CONF);
+} else {
+   print "WARNING: no local database found, please take care to configure your database correctly manual\n";
+   $dbinstall=0;
+}
+$ask=1;
+if ($ARGV[0] eq "leave") {
+  $ask=0; 
+  $dbinstall=0;
+}
+if (($ARGV[0] eq "database") || ($ARGV[0] eq "shared"))
+{
+  $ask=0;
+}
+$dbinstall=1;
+if ($dbinstall) {
+ print "\n\nThis script can reconfigure your local database, that is, add an ocfa user to the\n";
+ print "postgress database server and tune the database to use a good amounth of shared\n";
+ print "memory. If you plan to run the database locally say yes, if you plan a seperate\n";
+ print "database server than say no here\n\n";
+ undef($dbinstall);
+ while (!(defined($dbinstall))) {
+   print "Reconfigure database? (y/n) : ";
+   $ans=<>;
+   chomp($ans);
+   $ans=lc($ans);
+   if ($ans eq "y") {
+      $dbinstall=1;
+   }
+   if ($ans eq "n") {
+      $dbinstall=0; 
+   }
+ }
+} else {
+  print "Database was already reconfigured earlier\n";
+}
+if ($dbinstall) {
+  print "Determining physical memory for database config\n";
+  open(MEM,"/proc/meminfo")|| die "Unable to open /proc/meminfo\n";
+  while(<MEM>) {
+    if (/MemTotal:\s*(\d+)\s*kB/i) {
+      if ($ARGV[0] eq "database") {
+        $SHMEM=int($1*1024 / 2);
+      } else {
+        $SHMEM=int($1*1024 / 3);
+      }
+    }
+  }
+  unless ($SHMEM) {
+    die "unable to determine the amounth of physical memory\n";
+  }
+  $sharedbuffer_memory=$SHMEM -1950000;
+  $SHAREDBUFFERS = int($sharedbuffer_memory / 8448);
+  print "we will try to allocate $sharedbuffer_memory bytes as database shared memory\n";
+  print "we will try to set the shared buffers to $SHAREDBUFFERS\n";
+}
+open(PWD,"/etc/passwd")|| die "Unable to open password file for reading";
+while(<PWD>) {
+  if (/^ocfa:(.*)/) {
+	$ocfa="ocfa";
+	if($1 =~ /:\/usr\/local\/digiwash:/) { $ocfa_homedir="digiwash";}
+  }
+  if (/^apache:/) {$apache="apache";}
+  if (/^www-data:/) {$apache="www-data";}
+  if (/^wwwrun:/) {$apache="wwwrun";}
+}
+if ($ocfa) {
+  print "ocfa user already exists\n";
+  if(!$ocfa_homedir) {
+     print "CONFIG ERROR: please change ocfa home dir!\n\n";
+     exit 1;
+  }
+} else {
+  print "Creating user ocfa with password ocfa, YOU WILL NEED TO UPDATE THE PASWORD AFTER INSTALL\n";
+  $rval=`/usr/sbin/useradd -s /bin/bash -c "Open Computer Forensic Architecture" -d /usr/local/digiwash -g ocfa -p ocfa ocfa`;
+  print "$rval\n";
+}
+if ($dbinstall) {
+    print "Creating database user for ocfa user\n";
+    $rval=`/bin/su postgres --command="/usr/bin/createuser -A -d ocfa"`;
+    print "$rval\n";
+    open(PSQL,"|/bin/su postgres --command=\"psql template1\"") || die "Unable to start psql as user postgres";
+    print PSQL "ALTER USER ocfa WITH PASSWORD 'ocfa';\n";
+    close(PSQL);
+    print "Updating access to use passwords\n";
+    $hbafound=0;    
+    foreach $PGDIR ("/var/lib/postgres/data","/var/lib/pgsql/data/","/etc/postgresql/$pversion/main") {
+    if ( -f "${PGDIR}/pg_hba.conf") {
+      $hbafound++;
+      unless (-f "${PGDIR}/pg_hba.conf.backup_ocfa") {
+        rename("${PGDIR}/pg_hba.conf","${PGDIR}/pg_hba.conf.backup_ocfa") ||
+          die "Unable to backup ${PGDIR}/pg_hba.conf";
+        open(INF,"${PGDIR}/pg_hba.conf.backup_ocfa")|| 
+         die "Can not open ${PGDIR}/pg_hba.conf.backup_ocfa for reading";
+        open(OUTF,">${PGDIR}/pg_hba.conf") || die "Can not open ${PGDIR}/pg_hba.conf for writing";
+        while(<INF>) {
+	   unless (/postgres/) {
+             s/ident\s+sameuser/password/;
+             s/ident/password/;
+             s/reject/md5/;
+	   }
+           print OUTF "$_";
+        }
+        close(INF);
+        close(OUTF);
+        rename("${PGDIR}/postgresql.conf","${PGDIR}/postgresql.conf.backup_ocfa") ||
+                die "Unable to backup ${PGDIR}/postgresql.conf";
+        open(INF,"${PGDIR}/postgresql.conf.backup_ocfa") ||
+                die "Unable to open ${PGDIR}/postgresql.conf.backup_ocfa for reading";
+        open(OUTF,">${PGDIR}/postgresql.conf") ||
+                die "Unable to open ${PGDIR}/postgresql.conf for writing";
+        while(<INF>) {
+          s/^shared_buffers/#shared_buffers/;
+	  s/^sort_mem/#sort_mem/;
+	  s/^tcpip_socket/#tcpip_socket/;
+	  s/^fsync/#fsync/;
+	  s/^max_connections/#max_connections/;
+	  print OUTF "$_";
+        }
+        print OUTF "# Open Computer Forensic Architecture instalation script has added the folowing\n";
+        if (($PGDIR =~ /8/) || ($PGDIR =~ /pgsql/)) {
+          print OUTF "listen_addresses = '*'\n";
+        } else {
+          print OUTF "tcpip_socket = true\n";
+        }
+        print OUTF "fsync = false\n";
+	print OUTF "max_connections = $MAXCONNECTIONS\n";
+	#FIXME: Possible problems in newer versions of postgresql above version 8.3.x
+        if (($PGDIR =~ /8/) || ($PGDIR =~ /pgsql/)) {
+           $SHAREDBUFFERS -=25;
+           unless ($PGDIR =~ /8\.[012]/) {
+              $SHAREDBUFFERS -= 75;
+           }
+        }
+        print OUTF "shared_buffers = $SHAREDBUFFERS\n";
+        print OUTF "sort_mem = 16384\n";
+	close(OUTF);
+	if (open(CONF,">>/etc/sysctl.conf")) {
+           print CONF "kernel.shmmax=$SHMEM\n";
+	   close(CONF);
+	} else {
+           print "WARNING: Unable to write to /etc/sysctl.conf, you need to configure kernel.shmmax manualy to\n\n\t";
+	   print "kernel.shmmax=$SHMEM\n\n";
+	}
+	`sysctl -w kernel.shmmax=$SHMEM`;
+	if (-f "/etc/init.d/postgresql") {
+          `/etc/init.d/postgresql restart`;
+	} else {
+	  print "WARNING: postgress reconfigured, you WILL need to restart postgress now\n";
+	}
+      } else {
+         print "${PGDIR}/pg_hba.conf.backup_ocfa found, postgress already reconfigured\n";
+      }
+    }
+    }
+    unless ($hbafound) {
+       print "ERROR: no pg_hba.conf located\n";
+    }
+} else {
+      print "WARNING: skipping database configuration\n";
+}
+if ($apache) {
+  &adduser($apache);
+} else {
+  print "WARNING: No apache or www-data user found needed for valid UI install\n";
+}
+&adduser("root");
+
