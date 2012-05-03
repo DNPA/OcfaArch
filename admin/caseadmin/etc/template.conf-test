@@ -92,4 +92,4 @@ outlookinfile=outlookmain.in
 
 #Java modules
 log4j=$OCFAROOT/etc/log4j.properties
-
+javalibraries=javalucene.jar

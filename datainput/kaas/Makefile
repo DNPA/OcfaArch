@@ -36,7 +36,7 @@ LIBS = $(INSTALLIB)/libocfaevidence.la $(OCFALIBS)
 #Uncomment one of the folowing to select an architecture
 
 $(BUILDDIR)/$(MODULEEXEC): $(OBJFILESLIB) $(LIBS)
-	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/$(MODULEEXEC) $(OBJFILESLIB) $(LIBS) -lPocoFoundation -lPocoNet -lPocoUtil
+	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/$(MODULEEXEC) $(OBJFILESLIB) $(LIBS) -lPocoFoundation -lPocoNet -lPocoUtil -locfafacade -locfamodule -locfatreegraph
 
 
 all: $(BUILDDIR)/$(MODULEEXEC)

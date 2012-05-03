@@ -137,11 +137,56 @@ unless (chown(-1,$ocfagid,$CASE_CONF_FILE)) {
 chown($ocfauid,-1,$CASE_CONF_FILE);	  
 copy("$OCFAETC/dsm.conf","$CASEETCDIR/dsm.conf") || die "Problem copying $OCFAETC/dsm.conf to $CASEETCDIR/dsm.conf";
 copy("$OCFAETC/rulelist.csv","$CASEETCDIR/rulelist.csv") || die "Problem copying $OCFAETC/rulelist.csv to $CASEETCDIR/rulelist.csv";
-if ( -f "$OCFAETC/w32modules" ){ copy("$OCFAETC/w32modules","$CASEETCDIR/w32modules");}
-if ( -f "$OCFAETC/treemodules") {copy("$OCFAETC/treemodules","$CASEETCDIR/treemodules");}
-if ( -f "$OCFAETC/javamodules"){ copy("$OCFAETC/javamodules","$CASEETCDIR/javamodules");}
-if ( -f "$OCFAETC/debugmodules"){copy("$OCFAETC/debugmodules","$CASEETCDIR/debugmodules");}
-if ( -f "$OCFAETC/scalpel.conf"){copy("$OCFAETC/scalpel.conf","$CASEETCDIR/scalpel.conf");}
+if ( -f "$OCFAETC/w32modules.example" ){ copy("$OCFAETC/w32modules.example","$CASEETCDIR/w32modules");}
+if ( -f "$OCFAETC/treemodules-cp.example") {
+  copy("$OCFAETC/treemodules-cp.example","$CASEETCDIR/treemodules-cp");
+  copy("$OCFAETC/treemodules-no-cp.example","$CASEETCDIR/treemodules-no-cp");
+  my $treemodulestarget="$CASEETCDIR/treemodules-no-cp";
+  my $hasscalpel=0;
+  my $hasphotorec=0;
+  if (-f "$REALOCFAROOT/sbin/photorec") {
+     $hasphotorec=1;
+  }
+  if (-f "$REALOCFAROOT/lib/libcarver.so") {
+     $hasscalpel=1;
+  }
+  if ($hasscalpel) {
+      if ($hasphotorec) {
+        my $input = 0;
+        while (not (($input == 1) || ($input == 2))) {  
+          print "\n\n\n\n";
+          print "IMPORTANT: The OCFA installation was built with two different carvers:\n";
+          print "  1) Photorec: A more advanced carver WITHOUT carvpath support.\n";
+          print "               This carver will yield less false positives, but the lack\n";
+          print "               of CarvPath support will result in slower runs and more use\n";
+          print "               of diskspace.\n";
+          print "  2) Scalpel:  A less advanced but CarvPath aware carver.\n";
+          print "               This carver will run faster, make your runs take up less storage,\n";
+          print "               but will generate more false positives and will require you to\n";
+          print "               exclusively use kicktree with rawcp/e01cp module for entering evidence.\n";
+          print "Choose 1 or 2 :";
+          $input = <>;
+        }
+        if ($input == 2) {
+          $treemodulestarget="$CASEETCDIR/treemodules-cp";
+        }
+      } else {
+          print "WARNING: Using the scalpel carver (the alternative scalpel carver isn't installed)\n";
+          print "         This will currently require you to exclusively use kicktree with rawcp/e01cp\n";
+          print "         module for entering evidence.\n"; 
+          $treemodulestarget="$CASEETCDIR/treemodules-cp";
+      }
+  } elsif ($hasphotorec) {
+      print "NOTICE: Using the photorec carver (the alternative scalpel carver isn't installed)\n"; 
+      print "        Usage of this carver  will negatively impact processing time and storage use,\n";
+      print "        but should allow you more flexibility with respect to entering evidence.\n"; 
+  }
+  symlink($treemodulestarget,"$CASEETCDIR/treemodules");
+}
+if ( -f "$OCFAETC/javamodules.example"){ copy("$OCFAETC/javamodules.example","$CASEETCDIR/javamodules");}
+if ( -f "$OCFAETC/debugmodules.example"){copy("$OCFAETC/debugmodules.example","$CASEETCDIR/debugmodules");}
+if ( -f "$OCFAETC/scalpel.conf.example"){copy("$OCFAETC/scalpel.conf.example","$CASEETCDIR/scalpel.conf");}
+
 open(REL,">${CASEETCDIR}/release") || die "Unable to open ${CASEETCDIR}/release for writing\n";
 print REL "$OCFARELEASE\n";
 close(REL);

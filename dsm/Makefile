@@ -25,10 +25,10 @@ INCFLAGS+= -I$(INCPQDIR)
 #GCCFLAGS=-Wall -pedantic-errors -Wno-long-long
 
 $(PROJECT): $(OBJFILESLIB) 
-	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/dsm1 $(OBJFILESLIB) $(OCFALIBS) $(LIBPQDIR) -lpq
+	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/dsm1 $(OBJFILESLIB) $(OCFALIBS) $(LIBPQDIR) -lpq -locfafacade -locfamodule -locfatreegraph
 
 dsm2:	$(OBJFILESLIB2)
-	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/dsm2 $(OBJFILESLIB2) $(OCFALIBS)
+	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/dsm2 $(OBJFILESLIB2) $(OCFALIBS) -lpq -locfafacade -locfamodule -locfatreegraph
 
 all:	dsm dsm2
 

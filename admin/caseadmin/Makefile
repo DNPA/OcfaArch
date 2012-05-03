@@ -39,6 +39,7 @@ install: all
 	$(LIBTOOL) --mode=install cp scripts/go_o* $(INSTALL_DIR)
 	$(LIBTOOL) --mode=install cp etc/template.conf* $(INSTALL_ETC)
 	$(LIBTOOL) --mode=install cp etc/*.sql $(INSTALL_ETC)
+	$(LIBTOOL) --mode=install cp etc/javamodules.example $(INSTALL_ETC)
 	$(LIBTOOL) --mode=install cp $(BUILDDIR)/$(REMOVEITEM_EXEC) $(INSTALL_DIR)
 	$(LIBTOOL) --mode=install cp $(BUILDDIR)/$(HIDEITEM_EXEC) $(INSTALL_DIR)
 	$(LIBTOOL) --mode=install cp $(BUILDDIR)/$(DELETEHIDDEN_EXEC) $(INSTALL_DIR)

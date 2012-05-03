@@ -7,7 +7,7 @@ default;DNTCR;validformat;0;mailsplit;ACT_FORWARD;mailwash;
 default;DNTCR;validformat;0;DNTCR;ACT_FORWARD;digital_investigator_review_invalidformat;
 default;DNTCR;brokenmodule;1;DNTCR;ACT_FORWARD;digital_investigator_review_brokenmodule;
 #Put a braik on the number of jobs a single evidence could have traversed.
-default;DNTCR;jobcount;20;DNTCR;ACT_COMMIT;dsm;
+default;DNTCR;jobcount;50;DNTCR;ACT_COMMIT;dsm;
 #Anything with a nodetype must be something just derived.
 default;DNTCR;nodetype;DNTCR;DNTCR;ACT_JUMP;newnode;
 #What remains are non-new nodes.
@@ -137,6 +137,9 @@ newfiles;DNTCR;DNTCR;DNTCR;antiword;ACT_FORWARD;indexer;
 newfiles;DNTCR;DNTCR;DNTCR;pdftotext;ACT_FORWARD;indexer;
 newfiles;DNTCR;DNTCR;DNTCR;mailsplit;ACT_FORWARD;mailwash;
 newfiles;DNTCR;DNTCR;DNTCR;dbxsplit;ACT_FORWARD;mailwash;
+# new created files from Office Modules to indexer
+newfiles;DNTCR;DNTCR;DNTCR;excel;ACT_FORWARD;indexer;
+newfiles;DNTCR;DNTCR;DNTCR;ole2txt;ACT_FORWARD;indexer;
 newfiles;DNTCR;mimetype;DNTCR;mailwash;ACT_JUMP;nwcontenttypedfl;
 newfiles;DNTCR;haspassword;DNTCR;DNTCR;ACT_FORWARD;digital_investigator_review_haspassword;
 newfiles;DNTCR;evidencelocation;Thumbs.db;DNTCR;ACT_FORWARD;vinettocfa;
@@ -179,7 +182,9 @@ lastmodule;DNTCR;DNTCR;DNTCR;indexer;ACT_COMMIT;dsm;
 lastmodule;DNTCR;DNTCR;DNTCR;mailsplit;ACT_COMMIT;dsm;
 lastmodule;DNTCR;DNTCR;DNTCR;dbxsplit;ACT_COMMIT;dsm;
 lastmodule;DNTCR;DNTCR;DNTCR;mailwash;ACT_COMMIT;dsm;
-lastmodule;DNTCR;DNTCR;DNTCR;exif;ACT_FORWARD;fivesfaces;
+#The fivesfaces module is disabled by default.
+#lastmodule;DNTCR;DNTCR;DNTCR;exif;ACT_FORWARD;fivesfaces;
+lastmodule;DNTCR;DNTCR;DNTCR;exif;ACT_COMMIT;dsm;
 lastmodule;DNTCR;DNTCR;DNTCR;7z;ACT_COMMIT;dsm;
 lastmodule;DNTCR;DNTCR;DNTCR;antiword;ACT_COMMIT;dsm;
 lastmodule;DNTCR;DNTCR;DNTCR;bzip;ACT_COMMIT;dsm;
@@ -190,6 +195,10 @@ lastmodule;DNTCR;DNTCR;DNTCR;tar;ACT_COMMIT;dsm;
 lastmodule;DNTCR;DNTCR;DNTCR;zip;ACT_COMMIT;dsm;
 lastmodule;DNTCR;DNTCR;DNTCR;objdump;ACT_COMMIT;dsm;
 lastmodule;DNTCR;DNTCR;DNTCR;pgp;ACT_COMMIT;dsm;
+# last module routing for office documents
+lastmodule;DNTCR;DNTCR;DNTCR;ole2txt;ACT_FORWARD;excel;
+lastmodule;DNTCR;DNTCR;DNTCR;antiword;ACT_FORWARD;ole2txt;
+lastmodule;DNTCR;DNTCR;DNTCR;excel;ACT_COMMIT;dsm;
 ###################################################################
 # Processing of images that are entered directly                  #
 ###################################################################
@@ -214,6 +223,7 @@ digestsource;DNTCR;digestsource;KP;DNTCR;ACT_COMMIT;dsm;
 digestsource;DNTCR;digestsource;MALL;DNTCR;ACT_COMMIT;dsm;
 digestsource;DNTCR;digestsource;DNTCR;DNTCR;ACT_FORWARD;file;
 #
+contenttype;DNTCR;mimetype;application/msword;DNTCR;ACT_FORWARD;antiword;
 contenttype;DNTCR;mimetype;application/x-rar;DNTCR;ACT_FORWARD;ocfarar;
 contenttype;DNTCR;mimetype;image/jpeg;DNTCR;ACT_FORWARD;exif;
 contenttype;DNTCR;mimetype;application/msword;DNTCR;ACT_FORWARD;antiword;
@@ -251,7 +261,8 @@ contenttype;DNTCR;mimetype;text/GnuPG;DNTCR;ACT_FORWARD;pkr;
 contenttype;DNTCR;mimetype;text;DNTCR;ACT_FORWARD;indexer;
 contenttype;DNTCR;mimetype;application/x-dosexec;DNTCR;ACT_FORWARD;objdump;
 contenttype;DNTCR;mimetype;application/dosexec;DNTCR;ACT_FORWARD;objdump;
-contenttype;DNTCR;fileinfo;Microsoft Office Document;DNTCR;ACT_FORWARD;antiword;
+contenttype;DNTCR;fileinfo;Microsoft Office Document;DNTCR;ACT_FORWARD;ole2txt;
+contenttype;DNTCR;fileinfo;OpenDocument;DNTCR;ACT_FORWARD;zip;
 contenttype;DNTCR;fileinfo;x-ocfa-xmlutf16LE;DNTCR;ACT_FORWARD;utf16le2utf8;
 contenttype;DNTCR;fileinfo;VMWare;DNTCR;ACT_FORWARD;qemuimg;
 contenttype;DNTCR;fileinfo;COW file;DNTCR;ACT_FORWARD;qemuimg;
@@ -261,7 +272,8 @@ contenttype;DNTCR;fileinfo;filesystem;DNTCR;ACT_FORWARD;fsstat;
 contenttype;DNTCR;fileinfo;partition;DNTCR;ACT_FORWARD;fsstat;
 contenttype;DNTCR;fileinfo;boot sector;DNTCR;ACT_FORWARD;fsstat;
 #
-fileext;DNTCR;fileextension;doc;DNTCR;ACT_FORWARD;antiword;
+fileext;DNTCR;fileextension;doc;DNTCR;ACT_FORWARD;ole2txt;
+fileext;DNTCR;fileextension;xls;DNTCR;ACT_FORWARD;excel;
 fileext;DNTCR;fileextension;eml;DNTCR;ACT_FORWARD;mailwash;
 fileext;DNTCR;fileextension;dbx;DNTCR;ACT_FORWARD;dbxsplit;
 fileext;DNTCR;fileextension;pgp;DNTCR;ACT_FORWARD;pkr;
@@ -281,4 +293,3 @@ crapcontenttype;DNTCR;mimetype;video;DNTCR;ACT_COMMIT;dsm;
 oletype;DNTCR;oletype;WordDocument;DNTCR;ACT_FORWARD;antiword;
 oletype;DNTCR;oletype;PowerPoint;DNTCR;ACT_FORWARD;strings;
 oletype;DNTCR;oletype;Visio;DNTCR;ACT_FORWARD;strings;
-oletype;DNTCR;oletype;DNTCR;DNTCR;ACT_FORWARD;strings;

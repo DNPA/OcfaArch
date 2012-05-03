@@ -47,10 +47,10 @@ LIBS= $(INSTALLIB)/libocfafs.la $(INSTALLIB)/libocfaevidence.la $(INSTALLIB)/lib
 #
 #Uncomment one of the folowing to select an architecture
 all: $(OBJFILESLIB) $(OBJFILESLIB2) $(OBJFILESLIB3) $(OBJFILESLIB5) 
-	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/$(MODULEEXEC) $(OBJFILESLIB) $(LIBS)
-	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/$(MODULEEXEC2) $(OBJFILESLIB2) $(LIBS)
-	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/$(MODULEEXEC3) $(OBJFILESLIB3) $(LIBS) -lpq
-	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/$(MODULEEXEC5) $(OBJFILESLIB5) $(LIBS)
+	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/$(MODULEEXEC) $(OBJFILESLIB) $(LIBS) -locfafacade -locfamodule -locfatreegraph
+	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/$(MODULEEXEC2) $(OBJFILESLIB2) $(LIBS) -locfafacade -locfamodule -locfatreegraph
+	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/$(MODULEEXEC3) $(OBJFILESLIB3) $(LIBS) -lpq -locfafacade -locfamodule -locfatreegraph
+	$(LIBTOOL) --tag=CPP --mode=link g++ -o $(BUILDDIR)/$(MODULEEXEC5) $(OBJFILESLIB5) $(LIBS) -locfafacade -locfamodule -locfatreegraph
  
 #	$(LIBTOOL) --mode=link g++ -g $(LIBS) -L/usr/local/BerkeleyDB.4.1/lib/ -o $(BUILDDIR)/digest ../../../ipc/build/libocfa.la# $(BUILDDIR)/digest.lo
 #

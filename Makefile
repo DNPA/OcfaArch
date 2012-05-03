@@ -1,7 +1,7 @@
 OCFAARCH_TOP_DIR=.
 include configure.makeinfo
 SHELL := /bin/bash
-SUBTARGETS= ppq anycastrelay router fivesrouter dsm datainput/kickstart admin $(EXTRAARCH)
+SUBTARGETS= ppq anycastrelay datainput/kickstart router fivesrouter dsm admin $(EXTRAARCH)
 all:
 	if [ $(CONF_OK) ]; then \
 		echo Configuration seems ok; \
@@ -49,6 +49,7 @@ install: all
 	fi ; \
 	done; \
 	inst/updateusers
+	chown ocfa $(DISTDIR)/etc/template.conf*
 	install -d $(VARDIR)/queues
 	chown ocfa:ocfa $(VARDIR)/queues
 	chmod 775 $(VARDIR)/queues

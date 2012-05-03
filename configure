@@ -135,8 +135,7 @@ sub iconv_lib_needed {
 sub find_static_lib {
   my $libprefix=shift;
   my $rval;
-  foreach my $libdir ("/lib$libarch","/usr/lib$libarch","/usr/local/lib$libarch") {
-    print "Looking for static $libprefix in $libdir\n";
+  foreach my $libdir ("/lib","/usr/lib","/usr/local/lib","/lib$libarch","/usr/lib$libarch","/usr/local/lib$libarch") {
     if (opendir(LIB,$libdir)) {
        while(my $file=readdir(LIB)) {
          my $path="${libdir}/$file";
@@ -147,8 +146,6 @@ sub find_static_lib {
          }
        }
        closedir(LIB);
-    } else {
-      print RED,"WARNING",RESET,": Can not read the $libdir dir\n";
     }
   }
   unless ($rval) {
@@ -162,8 +159,7 @@ sub find_static_lib {
 sub find_dynamic_lib {
   my $libprefix=shift;
   my $rval;
-  foreach my $libdir ("/usr/lib$libarch","/usr/local/lib$libarch") {
-    print "Looking for dynamic $libprefix in $libdir\n";
+  foreach my $libdir ("/usr/lib","/usr/local/lib","/usr/lib$libarch","/usr/local/lib$libarch") {
     if (opendir(LIB,$libdir)) {
        while(my $file=readdir(LIB)) {
          my $path="${libdir}/$file";
@@ -174,8 +170,6 @@ sub find_dynamic_lib {
          }
        }
        closedir(LIB);
-    } else {
-      print RED,"WARNING",RESET,": Can not read the $libdir dir\n";
     }
   }
   unless ($rval) {
@@ -242,8 +236,9 @@ sub generic_config {
      if (-f "/usr/lib64/libc.so") {
         print RED,"NOTICE",RESET,": lib64 support enabled, looking for lib64 dirs instead of lib dirs\n";
         $libarch="64";
-     } else {
-        print "NOTICE: lib64 support disabled (on 64 bit system)\n";
+     } 
+     if ((-f "/lib/x86_64-linux-gnu/libc.so") || ( -f "/usr/lib/x86_64-linux-gnu/libc.so")) {
+        $libarch="/x86_64-linux-gnu"; #this is a bit of a hack to make things work on ubuntu.
      }
   } else {
      print "NOTICE: non x86_64 linux architecture, assuming 32 bits\n";
@@ -328,7 +323,6 @@ sub boost_stuff {
     $newboost=1;
   }
  } else {
-  print RED,"WARNING",RESET," : Unable to determine boost version, assuming >= 1.33\n";
   $newboost=1;
  }
  if (open(CONFHPP,">inc/message/boostconf.hpp")) {

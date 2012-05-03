@@ -13,7 +13,7 @@ INCFLAGS += -I$(IMPLINCDIR) -I$(INTERFACEDIR) -I$(BOOSTINCDIR)
 LIBS += -l$(BOOST_REGEX_LIB) 
 
 $(PROJECT): $(OBJFILESLIB) 
-	$(LIBTOOL) --tag=CPP --mode=link g++ -g -o $(BUILDDIR)/$(PROJECT) $(OBJFILESLIB) $(LIBS) $(OCFALIBS)
+	$(LIBTOOL) --tag=CPP --mode=link g++ -g -o $(BUILDDIR)/$(PROJECT) $(OBJFILESLIB) $(LIBS) $(OCFALIBS) -locfafacade -locfamodule -locfatreegraph
  
 #$(BUILDDIR)/%.lo: $(SRCDIR)/%.cpp
 #	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR);fi
