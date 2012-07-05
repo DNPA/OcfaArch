@@ -165,7 +165,7 @@ if ( -f "$OCFAETC/treemodules-cp.example") {
           print "               but will generate more false positives and will require you to\n";
           print "               exclusively use kicktree with rawcp/e01cp module for entering evidence.\n";
           print "Choose 1 or 2 :";
-          $input = <>;
+          $input = <STDIN>;
         }
         if ($input == 2) {
           $treemodulestarget="$CASEETCDIR/treemodules-cp";
